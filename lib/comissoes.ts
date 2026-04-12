@@ -35,7 +35,10 @@ export function calcularTotalPessoa(
 ): PessoaStats {
   const ops = operacoes.filter(o => o.responsavel === profile.login)
   const volumeTotal = ops.reduce((s, o) => s + Number(o.valor), 0)
-  const comBase = ops.reduce((s, o) => s + Number(o.comissao), 0)
+  const comBase = ops.reduce(
+    (s, o) => s + calcularComissao(o.tipo, Number(o.creditos) || 1, Number(o.valor)),
+    0
+  )
   const bonus = calcularBonusVolume(volumeTotal)
   const liq = liquidacaoTotal
   const salario = Number(profile.salario) || 0
