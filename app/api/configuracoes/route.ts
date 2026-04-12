@@ -58,7 +58,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
     }
 
-    const { chave, valor } = await request.json()
+    const { chave, valor, merge } = await request.json()
 
     if (!chave) {
       return NextResponse.json(
@@ -67,9 +67,24 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    let finalValor = valor
+
+    // If merge flag is set, deep-merge with existing value (used for per-month metas)
+    if (merge && chave === 'metas') {
+      const { data: existing } = await supabase
+        .from('configuracoes')
+        .select('valor')
+        .eq('chave', chave)
+        .maybeSingle()
+
+      const existingValor =
+        (existing?.valor as Record<string, unknown>) ?? {}
+      finalValor = { ...existingValor, ...valor }
+    }
+
     const { data, error } = await supabase
       .from('configuracoes')
-      .upsert({ chave, valor }, { onConflict: 'chave' })
+      .upsert({ chave, valor: finalValor }, { onConflict: 'chave' })
       .select()
       .single()
 
