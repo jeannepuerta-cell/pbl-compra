@@ -23,10 +23,12 @@ export default function DashboardClient({
   operacoes,
   liquidacao,
 }: DashboardClientProps) {
-  const pessoaStats: PessoaStats[] = profiles.map((p) => {
-    const liqPessoa = liquidacao?.por_pessoa?.[p.login] ?? 0
-    return calcularTotalPessoa(p, operacoes, liqPessoa)
-  })
+  const pessoaStats: PessoaStats[] = profiles
+    .filter((p) => p.setor !== 'gestor')
+    .map((p) => {
+      const liqPessoa = liquidacao?.por_pessoa?.[p.login] ?? 0
+      return calcularTotalPessoa(p, operacoes, liqPessoa)
+    })
 
   const volumeTotal = pessoaStats.reduce((s, p) => s + p.volumeTotal, 0)
   const comissoesTotais = pessoaStats.reduce((s, p) => s + p.totalComissao, 0)

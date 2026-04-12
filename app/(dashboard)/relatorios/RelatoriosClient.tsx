@@ -27,10 +27,12 @@ export default function RelatoriosClient({
   operacoes,
   liquidacao,
 }: RelatoriosClientProps) {
-  const pessoaStats: PessoaStats[] = profiles.map((p) => {
-    const liqPessoa = liquidacao?.por_pessoa?.[p.login] ?? 0
-    return calcularTotalPessoa(p, operacoes, liqPessoa)
-  })
+  const pessoaStats: PessoaStats[] = profiles
+    .filter((p) => p.setor !== 'gestor')
+    .map((p) => {
+      const liqPessoa = liquidacao?.por_pessoa?.[p.login] ?? 0
+      return calcularTotalPessoa(p, operacoes, liqPessoa)
+    })
 
   const totals = pessoaStats.reduce(
     (acc, p) => ({

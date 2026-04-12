@@ -107,9 +107,10 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
   )
 
   const personStats = useMemo(() => {
+    const nonGestor = allProfiles.filter((p) => p.setor !== 'gestor')
     const relevantProfiles = isAdmin
-      ? allProfiles
-      : allProfiles.filter((p) => p.login === currentProfile.login)
+      ? nonGestor
+      : nonGestor.filter((p) => p.login === currentProfile.login)
     return relevantProfiles.map(buildPersonStats)
   }, [allProfiles, isAdmin, currentProfile.login, buildPersonStats])
 
@@ -251,7 +252,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
                 className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
               >
                 <option value="todos">Todos</option>
-                {allProfiles.map((p) => (
+                {allProfiles.filter((p) => p.setor !== 'gestor').map((p) => (
                   <option key={p.login} value={p.login}>
                     {p.name}
                   </option>
