@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 const USERS_BY_SETOR = {
+  Diretoria: [
+    { login: 'piercarlo', name: 'Piercarlo' },
+  ],
   Gestora: [
     { login: 'jeanne', name: 'Jeanne' },
   ],
