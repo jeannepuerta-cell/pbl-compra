@@ -78,8 +78,8 @@ export default function LoginPage() {
       <div className="w-full max-w-md mx-4">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white tracking-tight">
-            PBL <span className="text-dourado">Compra</span>
+          <h1 className="text-4xl font-bold text-dourado tracking-tight">
+            PBL Compra
           </h1>
           <p className="text-verde-claro/70 mt-2 text-sm">
             Sistema de Gestão de Compras
