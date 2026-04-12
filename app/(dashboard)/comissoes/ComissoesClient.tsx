@@ -17,6 +17,11 @@ interface Props {
 
 type Tab = 'individual' | 'equipe' | 'liquidacao' | 'gestora'
 
+function getCurrentMonth() {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
 export default function ComissoesClient({ currentProfile, allProfiles }: Props) {
   const isAdmin = currentProfile.role === 'admin'
   const [activeTab, setActiveTab] = useState<Tab>('individual')
@@ -24,6 +29,9 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
   const [liquidacoes, setLiquidacoes] = useState<Liquidacao[]>([])
   const [producaoData, setProducaoData] = useState<Producao[]>([])
   const [loading, setLoading] = useState(true)
+
+  // Month filter
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
 
   // Individual tab
   const [filterPerson, setFilterPerson] = useState<string>('todos')
@@ -90,23 +98,46 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
     if (isAdmin) fetchConfiguracoes()
   }, [fetchData, fetchConfiguracoes, isAdmin])
 
-  // Current month liquidacao
-  const currentMonthLiq = useMemo(() => {
-    const now = new Date()
-    const currentMes = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-    return liquidacoes.find((l) => l.mes === currentMes)
-  }, [liquidacoes])
+  // Available months (from operacoes + producao dates)
+  const availableMonths = useMemo(() => {
+    const monthSet = new Set<string>()
+    operacoes.forEach((o) => {
+      if (o.data) monthSet.add(o.data.substring(0, 7))
+    })
+    producaoData.forEach((p) => {
+      if (p.data) monthSet.add(p.data.substring(0, 7))
+    })
+    // Always include current month
+    monthSet.add(getCurrentMonth())
+    return Array.from(monthSet).sort().reverse()
+  }, [operacoes, producaoData])
+
+  // Filtered data by selected month
+  const filteredOperacoes = useMemo(() => {
+    if (!selectedMonth) return operacoes
+    return operacoes.filter((o) => o.data?.startsWith(selectedMonth))
+  }, [operacoes, selectedMonth])
+
+  const filteredProducao = useMemo(() => {
+    if (!selectedMonth) return producaoData
+    return producaoData.filter((p) => p.data?.startsWith(selectedMonth))
+  }, [producaoData, selectedMonth])
+
+  // Liquidacao for selected month
+  const selectedMonthLiq = useMemo(() => {
+    return liquidacoes.find((l) => l.mes === selectedMonth)
+  }, [liquidacoes, selectedMonth])
 
   // Build person stats
   const buildPersonStats = useCallback(
     (profile: Profile): PessoaStats => {
       let liqTotal = 0
-      if (profile.setor === 'juridico' && currentMonthLiq) {
-        liqTotal = currentMonthLiq.por_pessoa?.[profile.login] || 0
+      if (profile.setor === 'juridico' && selectedMonthLiq) {
+        liqTotal = selectedMonthLiq.por_pessoa?.[profile.login] || 0
       }
-      return calcularTotalPessoa(profile, operacoes, liqTotal, producaoData)
+      return calcularTotalPessoa(profile, filteredOperacoes, liqTotal, filteredProducao)
     },
-    [operacoes, currentMonthLiq, producaoData]
+    [filteredOperacoes, selectedMonthLiq, filteredProducao]
   )
 
   const personStats = useMemo(() => {
@@ -225,7 +256,28 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Comissões</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl font-bold text-gray-900">Comissões</h1>
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-500">Período:</label>
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+          >
+            {availableMonths.map((m) => {
+              const [y, mo] = m.split('-')
+              const d = new Date(Number(y), Number(mo) - 1)
+              const label = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+              return (
+                <option key={m} value={m}>
+                  {label.charAt(0).toUpperCase() + label.slice(1)}
+                </option>
+              )
+            })}
+          </select>
+        </div>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-2 flex-wrap">
