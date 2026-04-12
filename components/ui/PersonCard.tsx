@@ -21,7 +21,16 @@ export function PersonCard({ stats, showLiquidacao }: PersonCardProps) {
     .join('')
     .toUpperCase()
 
+  const isJuridico = stats.setor === 'juridico'
+
   const statItems = [
+    ...(isJuridico
+      ? [
+          { label: 'Proc. Inseridos', value: String(stats.processosInseridos), plain: true },
+          { label: 'Com. Inseridos (R$0,50)', value: formatBRL(stats.comissaoInseridos) },
+        ]
+      : []),
+    { label: 'Créditos Comprados', value: String(stats.comprados), plain: true },
     { label: 'Volume', value: formatBRL(stats.volumeTotal) },
     { label: 'Com. Base', value: formatBRL(stats.comBase) },
     { label: 'Bônus Volume', value: formatBRL(stats.bonus) },
@@ -29,7 +38,7 @@ export function PersonCard({ stats, showLiquidacao }: PersonCardProps) {
       ? [{ label: 'Liquidação', value: formatBRL(stats.liq) }]
       : []),
     { label: 'Salário', value: formatBRL(stats.salario) },
-    { label: 'Total', value: formatBRL(stats.totalBruto), highlight: true },
+    { label: 'Total a Receber', value: formatBRL(stats.totalBruto), highlight: true },
   ]
 
   return (
@@ -48,23 +57,23 @@ export function PersonCard({ stats, showLiquidacao }: PersonCardProps) {
               setorColors[stats.setor] || 'bg-gray-100 text-gray-700'
             }`}
           >
-            {stats.setor}
+            {stats.setor === 'juridico' ? 'Jurídico' : stats.setor === 'comercial' ? 'Comercial' : stats.setor}
           </span>
         </div>
         <div className="text-right">
-          <p className="text-xs text-gray-400">Operações</p>
-          <p className="text-sm font-bold text-gray-900">{stats.operacoes}</p>
+          <p className="text-xs text-gray-400">Comprados</p>
+          <p className="text-lg font-bold text-verde">{stats.comprados}</p>
         </div>
       </div>
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
         {statItems.map((item) => (
-          <div key={item.label} className={item.highlight ? 'col-span-2 pt-2 border-t border-gray-100' : ''}>
+          <div key={item.label} className={('highlight' in item && item.highlight) ? 'col-span-2 pt-2 border-t border-gray-100' : ''}>
             <p className="text-xs text-gray-400">{item.label}</p>
             <p
               className={`text-sm font-semibold ${
-                item.highlight ? 'text-verde text-base' : 'text-gray-800'
+                ('highlight' in item && item.highlight) ? 'text-verde text-base' : ('plain' in item && item.plain) ? 'text-gray-900' : 'text-gray-800'
               }`}
             >
               {item.value}

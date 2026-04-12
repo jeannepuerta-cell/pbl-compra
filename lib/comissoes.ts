@@ -1,4 +1,4 @@
-import { Operacao, PessoaStats, Profile } from './types'
+import { Operacao, PessoaStats, Producao, Profile } from './types'
 
 // Calculate commission for a single operation
 export function calcularComissao(tipo: string, creditos: number, valor: number): number {
@@ -31,14 +31,38 @@ export function calcularLiquidacaoPessoa(
 export function calcularTotalPessoa(
   profile: Profile,
   operacoes: Operacao[],
-  liquidacaoTotal: number
+  liquidacaoTotal: number,
+  producaoData?: Producao[]
 ): PessoaStats {
   const ops = operacoes.filter(o => o.responsavel === profile.login)
   const volumeTotal = ops.reduce((s, o) => s + Number(o.valor), 0)
-  const comBase = ops.reduce(
+
+  // Créditos comprados from operacoes
+  const comprados = ops.reduce((s, o) => s + (Number(o.creditos) || 0), 0)
+
+  // Processos inseridos from producao table (daily data, tipo='insercao')
+  const prodPessoa = producaoData?.filter(p => p.login === profile.login) || []
+  const processosInseridos = prodPessoa
+    .filter(p => p.tipo === 'insercao')
+    .reduce((s, p) => s + (Number(p.quantidade) || 0), 0)
+
+  // Compras from producao (for comercial, tipo='compra')
+  const comprasProd = prodPessoa
+    .filter(p => p.tipo === 'compra')
+    .reduce((s, p) => s + (Number(p.quantidade) || 0), 0)
+
+  // Comissão de processos inseridos: R$0,50 por processo (apenas jurídico)
+  const comissaoInseridos = profile.setor === 'juridico' ? processosInseridos * 0.50 : 0
+
+  // Comissão base from operacoes (créditos comprados * R$20 + bônus valor alto)
+  const comBaseOps = ops.reduce(
     (s, o) => s + calcularComissao(o.tipo, Number(o.creditos) || 1, Number(o.valor)),
     0
   )
+
+  // Total comBase = comissão de inseridos + comissão de créditos
+  const comBase = comissaoInseridos + comBaseOps
+
   const bonus = calcularBonusVolume(volumeTotal)
   const liq = liquidacaoTotal
   const salario = Number(profile.salario) || 0
@@ -55,6 +79,9 @@ export function calcularTotalPessoa(
     totalComissao: comBase + bonus + liq,
     totalBruto: comBase + bonus + liq + salario,
     operacoes: ops.length,
+    comprados: profile.setor === 'comercial' ? comprasProd || comprados : comprados,
+    processosInseridos,
+    comissaoInseridos,
   }
 }
 

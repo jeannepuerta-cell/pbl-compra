@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { Profile, Operacao, Liquidacao } from '@/lib/types'
+import { Profile, Operacao, Liquidacao, Producao } from '@/lib/types'
 import DashboardClient from './DashboardClient'
 
 export const metadata = {
@@ -30,7 +30,7 @@ export default async function DashboardPage() {
 
   const currentProfile = profile as Profile
 
-  const [profilesRes, operacoesRes, liquidacoesRes, metaRes] =
+  const [profilesRes, operacoesRes, liquidacoesRes, metaRes, producaoRes] =
     await Promise.all([
       supabase.from('profiles').select('*').order('name'),
       supabase.from('operacoes').select('*').order('data', { ascending: false }),
@@ -43,6 +43,7 @@ export default async function DashboardPage() {
         .select('*')
         .eq('chave', 'metas')
         .maybeSingle(),
+      supabase.from('producao').select('*').order('data', { ascending: true }),
     ])
 
   const profiles: Profile[] = profilesRes.data ?? []
@@ -50,6 +51,7 @@ export default async function DashboardPage() {
   const liquidacoes: Liquidacao[] = liquidacoesRes.data ?? []
   const metaConfig: Record<string, { meta: number; supermeta: number }> =
     (metaRes.data?.valor as Record<string, { meta: number; supermeta: number }>) ?? {}
+  const producaoData: Producao[] = producaoRes.data ?? []
 
   return (
     <DashboardClient
@@ -58,6 +60,7 @@ export default async function DashboardPage() {
       liquidacoes={liquidacoes}
       currentProfile={currentProfile}
       metaConfig={metaConfig}
+      producaoData={producaoData}
     />
   )
 }

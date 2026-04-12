@@ -59,6 +59,18 @@ export interface PessoaStats {
   totalComissao: number
   totalBruto: number
   operacoes: number
+  comprados: number
+  processosInseridos: number
+  comissaoInseridos: number
+}
+
+export interface Producao {
+  id: number
+  data: string
+  login: string
+  tipo: 'insercao' | 'compra'
+  quantidade: number
+  created_at: string
 }
 
 export interface MetaConfig {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { Profile, Operacao, Liquidacao, PessoaStats, MetaConfig } from '@/lib/types'
+import { Profile, Operacao, Liquidacao, Producao, PessoaStats, MetaConfig } from '@/lib/types'
 import {
   calcularTotalPessoa,
   calcularLiquidacaoPessoa,
@@ -22,6 +22,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
   const [activeTab, setActiveTab] = useState<Tab>('individual')
   const [operacoes, setOperacoes] = useState<Operacao[]>([])
   const [liquidacoes, setLiquidacoes] = useState<Liquidacao[]>([])
+  const [producaoData, setProducaoData] = useState<Producao[]>([])
   const [loading, setLoading] = useState(true)
 
   // Individual tab
@@ -50,12 +51,14 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [opsRes, liqRes] = await Promise.all([
+      const [opsRes, liqRes, prodRes] = await Promise.all([
         fetch('/api/operacoes'),
         fetch('/api/liquidacoes'),
+        fetch('/api/producao'),
       ])
       if (opsRes.ok) setOperacoes(await opsRes.json())
       if (liqRes.ok) setLiquidacoes(await liqRes.json())
+      if (prodRes.ok) setProducaoData(await prodRes.json())
     } catch {
       // ignore
     } finally {
@@ -101,9 +104,9 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
       if (profile.setor === 'juridico' && currentMonthLiq) {
         liqTotal = currentMonthLiq.por_pessoa?.[profile.login] || 0
       }
-      return calcularTotalPessoa(profile, operacoes, liqTotal)
+      return calcularTotalPessoa(profile, operacoes, liqTotal, producaoData)
     },
-    [operacoes, currentMonthLiq]
+    [operacoes, currentMonthLiq, producaoData]
   )
 
   const personStats = useMemo(() => {

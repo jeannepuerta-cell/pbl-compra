@@ -10,24 +10,19 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const mes = searchParams.get('mes') // YYYY-MM format
+    const mes = searchParams.get('mes') // YYYY-MM format (optional)
 
-    if (!mes) {
-      return NextResponse.json({ error: 'Parametro mes obrigatorio (YYYY-MM).' }, { status: 400 })
+    let query = supabase.from('producao').select('*').order('data', { ascending: true })
+
+    if (mes) {
+      const [year, month] = mes.split('-').map(Number)
+      const startDate = `${mes}-01`
+      const lastDay = new Date(year, month, 0).getDate()
+      const endDate = `${mes}-${String(lastDay).padStart(2, '0')}`
+      query = query.gte('data', startDate).lte('data', endDate)
     }
 
-    // Build date range for the month
-    const [year, month] = mes.split('-').map(Number)
-    const startDate = `${mes}-01`
-    const lastDay = new Date(year, month, 0).getDate()
-    const endDate = `${mes}-${String(lastDay).padStart(2, '0')}`
-
-    const { data, error } = await supabase
-      .from('producao')
-      .select('*')
-      .gte('data', startDate)
-      .lte('data', endDate)
-      .order('data', { ascending: true })
+    const { data, error } = await query
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })

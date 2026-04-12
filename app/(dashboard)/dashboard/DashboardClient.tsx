@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { Profile, Operacao, Liquidacao, PessoaStats } from '@/lib/types'
+import { Profile, Operacao, Liquidacao, Producao, PessoaStats } from '@/lib/types'
 import { calcularTotalPessoa, formatBRL } from '@/lib/comissoes'
 import { MetricCard } from '@/components/ui/MetricCard'
 import { ProgressBar } from '@/components/ui/ProgressBar'
@@ -13,6 +13,7 @@ interface DashboardClientProps {
   liquidacoes: Liquidacao[]
   currentProfile: Profile
   metaConfig: Record<string, { meta: number; supermeta: number }>
+  producaoData: Producao[]
 }
 
 type PeriodType = 'dia' | 'semana' | 'mes' | 'trimestre' | 'personalizado'
@@ -79,6 +80,7 @@ export default function DashboardClient({
   liquidacoes,
   currentProfile,
   metaConfig: initialMetaConfig,
+  producaoData,
 }: DashboardClientProps) {
   const isAdmin = currentProfile.role === 'admin'
   const today = new Date()
@@ -167,9 +169,9 @@ export default function DashboardClient({
       .filter((p) => p.setor !== 'gestor')
       .map((p) => {
         const liqPessoa = matchedLiquidacao?.por_pessoa?.[p.login] ?? 0
-        return calcularTotalPessoa(p, filteredOperacoes, liqPessoa)
+        return calcularTotalPessoa(p, filteredOperacoes, liqPessoa, producaoData)
       })
-  }, [profiles, filteredOperacoes, matchedLiquidacao])
+  }, [profiles, filteredOperacoes, matchedLiquidacao, producaoData])
 
   const volumeTotal = pessoaStats.reduce((s, p) => s + p.volumeTotal, 0)
   const comissoesTotais = pessoaStats.reduce((s, p) => s + p.totalComissao, 0)

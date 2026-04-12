@@ -1,6 +1,6 @@
 'use client'
 
-import { Profile, Operacao, Liquidacao, PessoaStats } from '@/lib/types'
+import { Profile, Operacao, Liquidacao, Producao, PessoaStats } from '@/lib/types'
 import { calcularTotalPessoa, formatBRL } from '@/lib/comissoes'
 import { SimpleBarChart } from '@/components/ui/SimpleBarChart'
 
@@ -8,6 +8,7 @@ interface RelatoriosClientProps {
   profiles: Profile[]
   operacoes: Operacao[]
   liquidacao: Liquidacao | null
+  producaoData: Producao[]
 }
 
 const SETOR_BADGE: Record<string, string> = {
@@ -26,17 +27,19 @@ export default function RelatoriosClient({
   profiles,
   operacoes,
   liquidacao,
+  producaoData,
 }: RelatoriosClientProps) {
   const pessoaStats: PessoaStats[] = profiles
     .filter((p) => p.setor !== 'gestor')
     .map((p) => {
       const liqPessoa = liquidacao?.por_pessoa?.[p.login] ?? 0
-      return calcularTotalPessoa(p, operacoes, liqPessoa)
+      return calcularTotalPessoa(p, operacoes, liqPessoa, producaoData)
     })
 
   const totals = pessoaStats.reduce(
     (acc, p) => ({
-      operacoes: acc.operacoes + p.operacoes,
+      comprados: acc.comprados + p.comprados,
+      processosInseridos: acc.processosInseridos + p.processosInseridos,
       volumeTotal: acc.volumeTotal + p.volumeTotal,
       comBase: acc.comBase + p.comBase,
       bonus: acc.bonus + p.bonus,
@@ -45,7 +48,8 @@ export default function RelatoriosClient({
       totalBruto: acc.totalBruto + p.totalBruto,
     }),
     {
-      operacoes: 0,
+      comprados: 0,
+      processosInseridos: 0,
       volumeTotal: 0,
       comBase: 0,
       bonus: 0,
@@ -90,7 +94,10 @@ export default function RelatoriosClient({
                   Setor
                 </th>
                 <th className="text-right px-4 py-3 font-semibold text-gray-600">
-                  Ops
+                  Inseridos
+                </th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-600">
+                  Comprados
                 </th>
                 <th className="text-right px-4 py-3 font-semibold text-gray-600">
                   Volume
@@ -116,7 +123,7 @@ export default function RelatoriosClient({
               {pessoaStats.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={10}
                     className="px-4 py-10 text-center text-gray-400"
                   >
                     Nenhum dado encontrado
@@ -142,7 +149,10 @@ export default function RelatoriosClient({
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right text-gray-700">
-                        {p.operacoes}
+                        {p.processosInseridos || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-right text-gray-700">
+                        {p.comprados}
                       </td>
                       <td className="px-4 py-3 text-right text-gray-700">
                         {formatBRL(p.volumeTotal)}
@@ -170,7 +180,10 @@ export default function RelatoriosClient({
                     <td className="px-4 py-3 text-verde-escuro">Total</td>
                     <td className="px-4 py-3" />
                     <td className="px-4 py-3 text-right text-verde-escuro">
-                      {totals.operacoes}
+                      {totals.processosInseridos}
+                    </td>
+                    <td className="px-4 py-3 text-right text-verde-escuro">
+                      {totals.comprados}
                     </td>
                     <td className="px-4 py-3 text-right text-verde-escuro">
                       {formatBRL(totals.volumeTotal)}
