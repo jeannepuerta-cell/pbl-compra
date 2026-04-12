@@ -24,11 +24,11 @@ export function PersonCard({ stats, showLiquidacao }: PersonCardProps) {
   const statItems = [
     { label: 'Volume', value: formatBRL(stats.volumeTotal) },
     { label: 'Com. Base', value: formatBRL(stats.comBase) },
-    { label: 'Bonus Volume', value: formatBRL(stats.bonus) },
+    { label: 'Bônus Volume', value: formatBRL(stats.bonus) },
     ...(showLiquidacao
-      ? [{ label: 'Liquidacao', value: formatBRL(stats.liq) }]
+      ? [{ label: 'Liquidação', value: formatBRL(stats.liq) }]
       : []),
-    { label: 'Salario', value: formatBRL(stats.salario) },
+    { label: 'Salário', value: formatBRL(stats.salario) },
     { label: 'Total', value: formatBRL(stats.totalBruto), highlight: true },
   ]
 
@@ -52,7 +52,7 @@ export function PersonCard({ stats, showLiquidacao }: PersonCardProps) {
           </span>
         </div>
         <div className="text-right">
-          <p className="text-xs text-gray-400">Operacoes</p>
+          <p className="text-xs text-gray-400">Operações</p>
           <p className="text-sm font-bold text-gray-900">{stats.operacoes}</p>
         </div>
       </div>

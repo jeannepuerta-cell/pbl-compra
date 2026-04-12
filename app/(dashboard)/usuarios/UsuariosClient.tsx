@@ -66,7 +66,7 @@ export default function UsuariosClient({ profiles }: Props) {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-verde-escuro mb-6">Usuarios</h1>
+      <h1 className="text-2xl font-bold text-verde-escuro mb-6">Usuários</h1>
 
       <div className="overflow-x-auto bg-white rounded-lg shadow">
         <table className="w-full border-collapse">
@@ -75,7 +75,7 @@ export default function UsuariosClient({ profiles }: Props) {
               <th className="px-4 py-3">Nome</th>
               <th className="px-4 py-3">Login</th>
               <th className="px-4 py-3">Setor</th>
-              <th className="px-4 py-3">Acoes</th>
+              <th className="px-4 py-3">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -99,7 +99,7 @@ export default function UsuariosClient({ profiles }: Props) {
             {profiles.length === 0 && (
               <tr>
                 <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
-                  Nenhum usuario encontrado.
+                  Nenhum usuário encontrado.
                 </td>
               </tr>
             )}
@@ -113,7 +113,7 @@ export default function UsuariosClient({ profiles }: Props) {
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
             <h2 className="text-lg font-semibold text-verde-escuro mb-1">Redefinir Senha</h2>
             <p className="text-sm text-gray-600 mb-4">
-              Usuario: <span className="font-medium">{modalUser.name}</span>
+              Usuário: <span className="font-medium">{modalUser.name}</span>
             </p>
 
             <label className="block text-sm font-medium text-gray-700 mb-1">

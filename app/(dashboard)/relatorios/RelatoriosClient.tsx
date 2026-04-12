@@ -71,9 +71,9 @@ export default function RelatoriosClient({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Relatorios</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Relatórios</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Relatorio consolidado de comissoes e volumes
+          Relatório consolidado de comissões e volumes
         </p>
       </div>
 
@@ -99,13 +99,13 @@ export default function RelatoriosClient({
                   Com. Base
                 </th>
                 <th className="text-right px-4 py-3 font-semibold text-gray-600">
-                  Bonus
+                  Bônus
                 </th>
                 <th className="text-right px-4 py-3 font-semibold text-gray-600">
-                  Liquidacao
+                  Liquidação
                 </th>
                 <th className="text-right px-4 py-3 font-semibold text-gray-600">
-                  Salario
+                  Salário
                 </th>
                 <th className="text-right px-4 py-3 font-semibold text-gray-600">
                   Total
@@ -203,7 +203,7 @@ export default function RelatoriosClient({
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
           <SimpleBarChart
             data={participacaoData}
-            title="Participacao Percentual no Volume"
+            title="Participação Percentual no Volume"
             formatValue={(v) => `${v}%`}
           />
         </div>

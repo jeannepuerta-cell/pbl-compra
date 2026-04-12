@@ -22,7 +22,7 @@ const allLinks = [
   },
   {
     href: '/lancamentos',
-    label: 'Lancamentos',
+    label: 'Lançamentos',
     adminOnly: true,
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -32,7 +32,7 @@ const allLinks = [
   },
   {
     href: '/producao',
-    label: 'Producao',
+    label: 'Produção',
     adminOnly: true,
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,7 +42,7 @@ const allLinks = [
   },
   {
     href: '/comissoes',
-    label: 'Comissoes',
+    label: 'Comissões',
     adminOnly: false,
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +62,7 @@ const allLinks = [
   },
   {
     href: '/usuarios',
-    label: 'Usuarios',
+    label: 'Usuários',
     adminOnly: true,
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,7 +73,7 @@ const allLinks = [
   },
   {
     href: '/relatorios',
-    label: 'Relatorios',
+    label: 'Relatórios',
     adminOnly: false,
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

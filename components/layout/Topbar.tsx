@@ -54,7 +54,7 @@ export function Topbar({ profile }: TopbarProps) {
       return
     }
     if (newPassword !== confirmPassword) {
-      setPasswordError('As senhas nao coincidem.')
+      setPasswordError('As senhas não coincidem.')
       return
     }
 
@@ -84,7 +84,7 @@ export function Topbar({ profile }: TopbarProps) {
         }, 1500)
       }
     } catch {
-      setPasswordError('Erro de conexao. Tente novamente.')
+      setPasswordError('Erro de conexão. Tente novamente.')
     } finally {
       setPasswordLoading(false)
     }

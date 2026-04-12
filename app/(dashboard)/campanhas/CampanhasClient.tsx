@@ -147,7 +147,7 @@ export default function CampanhasClient() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Premio (R$)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Prêmio (R$)</label>
             <input
               type="number"
               value={premio}
@@ -164,7 +164,7 @@ export default function CampanhasClient() {
               className="w-full border border-gray-300 rounded bg-white text-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-verde/50"
             >
               <option value="todos">Todos</option>
-              <option value="juridico">Juridico</option>
+              <option value="juridico">Jurídico</option>
               <option value="comercial">Comercial</option>
             </select>
           </div>

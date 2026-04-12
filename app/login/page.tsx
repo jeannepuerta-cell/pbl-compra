@@ -11,7 +11,7 @@ const USERS_BY_SETOR = {
   Gestora: [
     { login: 'jeanne', name: 'Jeanne' },
   ],
-  Juridico: [
+  Jurídico: [
     { login: 'daniel', name: 'Daniel' },
     { login: 'fernanda', name: 'Fernanda' },
     { login: 'luizfernando', name: 'Luiz Fernando' },

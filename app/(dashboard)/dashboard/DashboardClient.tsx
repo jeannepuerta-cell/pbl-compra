@@ -47,7 +47,7 @@ export default function DashboardClient({
   // Chart data: comissoes por setor
   const comissoesPorSetor = [
     {
-      name: 'Juridico',
+      name: 'Jurídico',
       value: pessoaStats
         .filter((p) => p.setor === 'juridico')
         .reduce((s, p) => s + p.totalComissao, 0),
@@ -69,7 +69,7 @@ export default function DashboardClient({
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Visao geral de resultados e comissoes
+          Visão geral de resultados e comissões
         </p>
       </div>
 
@@ -78,13 +78,13 @@ export default function DashboardClient({
         <MetricCard
           title="Volume Total"
           value={formatBRL(volumeTotal)}
-          subtitle={`${operacoes.length} operacoes`}
+          subtitle={`${operacoes.length} operações`}
           color="verde"
         />
         <MetricCard
-          title="Comissoes Totais"
+          title="Comissões Totais"
           value={formatBRL(comissoesTotais)}
-          subtitle="Base + Bonus + Liq."
+          subtitle="Base + Bônus + Liq."
           color="dourado"
         />
         <MetricCard
@@ -96,7 +96,7 @@ export default function DashboardClient({
         <MetricCard
           title="Total a Pagar"
           value={formatBRL(totalAPagar)}
-          subtitle="Comissoes + Salarios"
+          subtitle="Comissões + Salários"
           color="dourado"
         />
       </div>
@@ -105,7 +105,7 @@ export default function DashboardClient({
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-10 text-center">
           <p className="text-gray-400 text-lg">Nenhum dado encontrado</p>
           <p className="text-gray-300 text-sm mt-1">
-            Adicione operacoes para visualizar os graficos.
+            Adicione operações para visualizar os gráficos.
           </p>
         </div>
       ) : (
@@ -122,7 +122,7 @@ export default function DashboardClient({
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
               <SimpleBarChart
                 data={comissoesPorSetor}
-                title="Comissoes por Setor"
+                title="Comissões por Setor"
                 formatValue={(v) => formatBRL(v)}
               />
             </div>

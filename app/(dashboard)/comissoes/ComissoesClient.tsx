@@ -124,7 +124,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
     const compute = (setor: string) => {
       const members = personStats.filter((s) => s.setor === setor)
       return {
-        equipe: setor === 'juridico' ? 'Juridico' : 'Comercial',
+        equipe: setor === 'juridico' ? 'Jurídico' : 'Comercial',
         membros: members.length,
         volumeTotal: members.reduce((s, m) => s + m.volumeTotal, 0),
         comBase: members.reduce((s, m) => s + m.comBase, 0),
@@ -206,7 +206,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
   const tabs: { key: Tab; label: string; adminOnly?: boolean }[] = [
     { key: 'individual', label: 'Individual' },
     { key: 'equipe', label: 'Por Equipe' },
-    { key: 'liquidacao', label: 'Liquidacao Juridica', adminOnly: true },
+    { key: 'liquidacao', label: 'Liquidação Jurídica', adminOnly: true },
     { key: 'gestora', label: 'Painel da Gestora', adminOnly: true },
   ]
 
@@ -222,7 +222,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Comissoes</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Comissões</h1>
 
       {/* Tabs */}
       <div className="flex gap-2 flex-wrap">
@@ -273,7 +273,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
 
           {filteredStats.length === 0 && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-8 text-center text-gray-400">
-              Nenhuma comissao encontrada.
+              Nenhuma comissão encontrada.
             </div>
           )}
         </div>
@@ -290,7 +290,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
                   <th className="px-4 py-3 font-medium text-gray-600 text-right">Membros</th>
                   <th className="px-4 py-3 font-medium text-gray-600 text-right">Volume Total</th>
                   <th className="px-4 py-3 font-medium text-gray-600 text-right">Com. Base</th>
-                  <th className="px-4 py-3 font-medium text-gray-600 text-right">Bonus</th>
+                  <th className="px-4 py-3 font-medium text-gray-600 text-right">Bônus</th>
                   <th className="px-4 py-3 font-medium text-gray-600 text-right">Total</th>
                 </tr>
               </thead>
@@ -315,11 +315,11 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
       {activeTab === 'liquidacao' && isAdmin && (
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Nova Liquidacao</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Nova Liquidação</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mes</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mês</label>
                 <input
                   type="month"
                   value={liqMes}
@@ -359,7 +359,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
 
             {/* Per-person inputs */}
             <div className="space-y-3 mb-6">
-              <h3 className="text-sm font-semibold text-gray-700">Processos por pessoa (Juridico)</h3>
+              <h3 className="text-sm font-semibold text-gray-700">Processos por pessoa (Jurídico)</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {juridicoMembers.map((m) => (
                   <div key={m.login} className="flex items-center gap-3">
@@ -390,27 +390,27 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
               disabled={liqSaving || liqTotalProc <= 0 || liqPool <= 0}
               className="px-6 py-2 bg-verde text-white rounded-lg text-sm font-medium hover:bg-verde/90 disabled:opacity-50 transition-colors"
             >
-              {liqSaving ? 'Salvando...' : 'Salvar Liquidacao'}
+              {liqSaving ? 'Salvando...' : 'Salvar Liquidação'}
             </button>
           </div>
 
           {/* History */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">Historico de Liquidacoes</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Histórico de Liquidações</h2>
             </div>
             {liquidacoes.length === 0 ? (
-              <div className="p-8 text-center text-gray-400">Nenhuma liquidacao registrada.</div>
+              <div className="p-8 text-center text-gray-400">Nenhuma liquidação registrada.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 text-left">
-                      <th className="px-4 py-3 font-medium text-gray-600">Mes</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">Mês</th>
                       <th className="px-4 py-3 font-medium text-gray-600 text-right">Total Proc.</th>
                       <th className="px-4 py-3 font-medium text-gray-600 text-right">Pool</th>
                       <th className="px-4 py-3 font-medium text-gray-600 text-right">VPP</th>
-                      <th className="px-4 py-3 font-medium text-gray-600">Distribuicao</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">Distribuição</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -441,7 +441,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
       {activeTab === 'gestora' && isAdmin && (
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Metas do Mes</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Metas do Mês</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
@@ -529,7 +529,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
 
             {/* Projected commission */}
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-green-600">Comissao Gestora Projetada</p>
+              <p className="text-sm text-green-600">Comissão Gestora Projetada</p>
               <p className="text-2xl font-bold text-green-700">{formatBRL(comissaoGestora)}</p>
               <p className="text-xs text-green-500 mt-1">
                 Base: {formatBRL(superMetaAtingida ? 14000 : metaAtingida ? 12000 : 10000)} +
@@ -542,7 +542,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
               disabled={gestoraSaving}
               className="px-6 py-2 bg-verde text-white rounded-lg text-sm font-medium hover:bg-verde/90 disabled:opacity-50 transition-colors"
             >
-              {gestoraSaving ? 'Salvando...' : 'Salvar Configuracoes'}
+              {gestoraSaving ? 'Salvando...' : 'Salvar Configurações'}
             </button>
           </div>
         </div>

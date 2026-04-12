@@ -11,8 +11,8 @@ interface Props {
 }
 
 const TIPOS = [
-  { key: 'processo', label: 'Processo Juridico' },
-  { key: 'precatorio', label: 'Precatorio' },
+  { key: 'processo', label: 'Processo Jurídico' },
+  { key: 'precatorio', label: 'Precatório' },
   { key: 'comercial', label: 'Comercial' },
 ] as const
 
@@ -105,7 +105,7 @@ export default function LancamentosClient({ profiles }: Props) {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Excluir esta operacao?')) return
+    if (!confirm('Excluir esta operação?')) return
     try {
       const res = await fetch(`/api/operacoes?id=${id}`, { method: 'DELETE' })
       if (res.ok) {
@@ -165,11 +165,11 @@ export default function LancamentosClient({ profiles }: Props) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Lancamentos</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Lançamentos</h1>
 
       {/* Form */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Nova Operacao</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Nova Operação</h2>
 
         {/* Type tabs */}
         <div className="flex gap-2 mb-6">
@@ -193,7 +193,7 @@ export default function LancamentosClient({ profiles }: Props) {
             {/* Responsavel */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Responsavel
+                Responsável
               </label>
               <select
                 value={responsavel}
@@ -226,13 +226,13 @@ export default function LancamentosClient({ profiles }: Props) {
             {/* Numero */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Numero
+                Número
               </label>
               <input
                 type="text"
                 value={numero}
                 onChange={(e) => setNumero(e.target.value)}
-                placeholder="Numero do processo/operacao"
+                placeholder="Número do processo/operação"
                 className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
               />
             </div>
@@ -240,7 +240,7 @@ export default function LancamentosClient({ profiles }: Props) {
             {/* Creditos */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Creditos
+                Créditos
               </label>
               <input
                 type="number"
@@ -269,7 +269,7 @@ export default function LancamentosClient({ profiles }: Props) {
             {/* Comissao preview */}
             <div className="flex items-end">
               <div className="w-full rounded-lg bg-green-50 border border-green-200 px-3 py-2">
-                <p className="text-xs text-green-600">Comissao estimada</p>
+                <p className="text-xs text-green-600">Comissão estimada</p>
                 <p className="text-lg font-bold text-green-700">
                   {formatBRL(previewComissao)}
                 </p>
@@ -283,7 +283,7 @@ export default function LancamentosClient({ profiles }: Props) {
               disabled={submitting}
               className="px-6 py-2 bg-verde text-white rounded-lg text-sm font-medium hover:bg-verde/90 disabled:opacity-50 transition-colors"
             >
-              {submitting ? 'Salvando...' : 'Salvar Operacao'}
+              {submitting ? 'Salvando...' : 'Salvar Operação'}
             </button>
 
             {/* CSV Import */}
@@ -305,7 +305,7 @@ export default function LancamentosClient({ profiles }: Props) {
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900">
-            Operacoes ({operacoes.length})
+            Operações ({operacoes.length})
           </h2>
         </div>
 
@@ -313,7 +313,7 @@ export default function LancamentosClient({ profiles }: Props) {
           <div className="p-8 text-center text-gray-400">Carregando...</div>
         ) : operacoes.length === 0 ? (
           <div className="p-8 text-center text-gray-400">
-            Nenhuma operacao registrada.
+            Nenhuma operação registrada.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -322,12 +322,12 @@ export default function LancamentosClient({ profiles }: Props) {
                 <tr className="bg-gray-50 text-left">
                   <th className="px-4 py-3 font-medium text-gray-600">Data</th>
                   <th className="px-4 py-3 font-medium text-gray-600">Tipo</th>
-                  <th className="px-4 py-3 font-medium text-gray-600">Responsavel</th>
-                  <th className="px-4 py-3 font-medium text-gray-600">Numero</th>
-                  <th className="px-4 py-3 font-medium text-gray-600 text-right">Creditos</th>
+                  <th className="px-4 py-3 font-medium text-gray-600">Responsável</th>
+                  <th className="px-4 py-3 font-medium text-gray-600">Número</th>
+                  <th className="px-4 py-3 font-medium text-gray-600 text-right">Créditos</th>
                   <th className="px-4 py-3 font-medium text-gray-600 text-right">Valor</th>
-                  <th className="px-4 py-3 font-medium text-gray-600 text-right">Comissao</th>
-                  <th className="px-4 py-3 font-medium text-gray-600 text-center">Acoes</th>
+                  <th className="px-4 py-3 font-medium text-gray-600 text-right">Comissão</th>
+                  <th className="px-4 py-3 font-medium text-gray-600 text-center">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">

@@ -31,7 +31,7 @@ const JURIDICO_MEMBERS = [
 
 const COMERCIAL_MEMBERS = [
   { login: 'andressa', label: 'Andressa' },
-  { login: 'barbara', label: 'Barbara' },
+  { login: 'barbara', label: 'Bárbara' },
   { login: 'gabriella', label: 'Gabriella' },
   { login: 'hilary', label: 'Hilary' },
   { login: 'vitor', label: 'Vitor' },
@@ -243,7 +243,7 @@ function ProducaoGrid({
             </tr>
             <tr className="text-gray-600" style={{ backgroundColor: headerColor + '10' }}>
               <td className="border border-gray-200 px-2 py-1.5 sticky left-0 bg-gray-50 z-10">
-                MEDIA
+                MÉDIA
               </td>
               {colAverages.map((a, i) => (
                 <td key={i} className="border border-gray-200 px-1 py-1.5 text-center bg-gray-50">
@@ -294,7 +294,7 @@ function RankingSection({
       {/* Juridico Ranking */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <h3 className="text-sm font-bold text-white px-3 py-2" style={{ backgroundColor: '#01423e' }}>
-          Ranking Juridico - Insercoes
+          Ranking Jurídico - Inserções
         </h3>
         <table className="w-full text-sm">
           <thead>
@@ -302,7 +302,7 @@ function RankingSection({
               <th className="px-3 py-1.5 text-left">#</th>
               <th className="px-3 py-1.5 text-left">Nome</th>
               <th className="px-3 py-1.5 text-center">Total</th>
-              <th className="px-3 py-1.5 text-center">Media/dia</th>
+              <th className="px-3 py-1.5 text-center">Média/dia</th>
             </tr>
           </thead>
           <tbody>
@@ -329,7 +329,7 @@ function RankingSection({
               <th className="px-3 py-1.5 text-left">#</th>
               <th className="px-3 py-1.5 text-left">Nome</th>
               <th className="px-3 py-1.5 text-center">Total</th>
-              <th className="px-3 py-1.5 text-center">Media/dia</th>
+              <th className="px-3 py-1.5 text-center">Média/dia</th>
             </tr>
           </thead>
           <tbody>
@@ -424,7 +424,7 @@ export default function ProducaoClient() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-verde-escuro">Producao Diaria</h1>
+        <h1 className="text-2xl font-bold text-verde-escuro">Produção Diária</h1>
         <select
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
@@ -447,7 +447,7 @@ export default function ProducaoClient() {
           {/* Grids */}
           <div className="flex flex-col xl:flex-row gap-6">
             <ProducaoGrid
-              title="Processos Inseridos - Juridico"
+              title="Processos Inseridos - Jurídico"
               headerColor="#01423e"
               members={JURIDICO_MEMBERS}
               tipo="insercao"
