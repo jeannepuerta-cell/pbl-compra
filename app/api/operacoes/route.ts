@@ -78,6 +78,51 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 })
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || profile.role !== 'admin') {
+      return NextResponse.json({ error: 'Acesso negado.' }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { id, tipo, responsavel, numero, creditos: rawCreditos, valor: rawValor, data: opData } = body
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID obrigatório.' }, { status: 400 })
+    }
+
+    const creditos = Number(rawCreditos) || 1
+    const valor = Number(rawValor) || 0
+    const comissao = calcularComissao(tipo, creditos, valor)
+
+    const { data, error } = await supabase
+      .from('operacoes')
+      .update({ tipo, responsavel, numero: numero || null, creditos, valor, comissao, data: opData })
+      .eq('id', Number(id))
+      .select()
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json(data)
+  } catch {
+    return NextResponse.json({ error: 'Erro interno.' }, { status: 500 })
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient()

@@ -31,6 +31,16 @@ export default function LancamentosClient({ profiles }: Props) {
   const [creditos, setCreditos] = useState(1)
   const [valor, setValor] = useState(0)
 
+  // Edit modal state
+  const [editOp, setEditOp] = useState<Operacao | null>(null)
+  const [editTipo, setEditTipo] = useState<Tipo>('processo')
+  const [editResponsavel, setEditResponsavel] = useState('')
+  const [editData, setEditData] = useState('')
+  const [editNumero, setEditNumero] = useState('')
+  const [editCreditos, setEditCreditos] = useState(1)
+  const [editValor, setEditValor] = useState(0)
+  const [editSaving, setEditSaving] = useState(false)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const juridicoMembers = useMemo(
@@ -157,6 +167,55 @@ export default function LancamentosClient({ profiles }: Props) {
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
+
+  function openEditModal(op: Operacao) {
+    setEditOp(op)
+    setEditTipo(op.tipo as Tipo)
+    setEditResponsavel(op.responsavel)
+    setEditData(op.data)
+    setEditNumero(op.numero || '')
+    setEditCreditos(op.creditos)
+    setEditValor(op.valor)
+  }
+
+  async function handleEditSave() {
+    if (!editOp) return
+    setEditSaving(true)
+    try {
+      const res = await fetch('/api/operacoes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editOp.id,
+          tipo: editTipo,
+          responsavel: editResponsavel,
+          numero: editNumero,
+          creditos: editCreditos,
+          valor: editValor,
+          data: editData,
+        }),
+      })
+      if (res.ok) {
+        setEditOp(null)
+        await fetchOperacoes()
+      }
+    } catch {
+      // ignore
+    } finally {
+      setEditSaving(false)
+    }
+  }
+
+  const editPreviewComissao = useMemo(
+    () => calcularComissao(editTipo, editCreditos, editValor),
+    [editTipo, editCreditos, editValor]
+  )
+
+  const editRelevantMembers = useMemo(() => {
+    if (editTipo === 'processo') return juridicoMembers
+    if (editTipo === 'precatorio') return profiles.filter((p) => p.login === 'nicolli')
+    return comercialMembers
+  }, [editTipo, juridicoMembers, comercialMembers, profiles])
 
   const tipoLabel = (t: string) => {
     const found = TIPOS.find((x) => x.key === t)
@@ -357,12 +416,20 @@ export default function LancamentosClient({ profiles }: Props) {
                       {formatBRL(op.comissao)}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => handleDelete(op.id)}
-                        className="text-red-500 hover:text-red-700 text-xs font-medium"
-                      >
-                        Excluir
-                      </button>
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => openEditModal(op)}
+                          className="text-verde hover:text-verde-escuro text-xs font-medium"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(op.id)}
+                          className="text-red-500 hover:text-red-700 text-xs font-medium"
+                        >
+                          Excluir
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -371,6 +438,127 @@ export default function LancamentosClient({ profiles }: Props) {
           </div>
         )}
       </div>
+      {/* Edit Modal */}
+      {editOp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setEditOp(null)} />
+          <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Editar Operação</h2>
+
+            <div className="space-y-4">
+              {/* Tipo */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                <div className="flex gap-2">
+                  {TIPOS.map((t) => (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => setEditTipo(t.key)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        editTipo === t.key
+                          ? 'bg-verde text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Responsavel */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Responsável</label>
+                  <select
+                    value={editResponsavel}
+                    onChange={(e) => setEditResponsavel(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                  >
+                    {editRelevantMembers.map((m) => (
+                      <option key={m.login} value={m.login}>{m.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Data */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                  <input
+                    type="date"
+                    value={editData}
+                    onChange={(e) => setEditData(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                  />
+                </div>
+
+                {/* Numero */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Número</label>
+                  <input
+                    type="text"
+                    value={editNumero}
+                    onChange={(e) => setEditNumero(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                  />
+                </div>
+
+                {/* Creditos */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Créditos</label>
+                  <input
+                    type="number"
+                    value={editCreditos}
+                    onChange={(e) => setEditCreditos(Number(e.target.value) || 1)}
+                    min={1}
+                    className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                  />
+                </div>
+
+                {/* Valor */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Valor (R$)</label>
+                  <input
+                    type="number"
+                    value={editValor}
+                    onChange={(e) => setEditValor(Number(e.target.value) || 0)}
+                    min={0}
+                    step={0.01}
+                    className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                  />
+                </div>
+
+                {/* Preview comissao */}
+                <div className="flex items-end">
+                  <div className="w-full rounded-lg bg-green-50 border border-green-200 px-3 py-2">
+                    <p className="text-xs text-green-600">Comissão</p>
+                    <p className="text-lg font-bold text-green-700">{formatBRL(editPreviewComissao)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditOp(null)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  disabled={editSaving}
+                  className="px-4 py-2 text-sm font-medium text-white bg-verde rounded-lg hover:bg-verde-escuro disabled:opacity-50 transition-colors"
+                >
+                  {editSaving ? 'Salvando...' : 'Salvar Alterações'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
