@@ -95,7 +95,7 @@ export default function ColaboradoresClient({ profiles: initialProfiles }: Props
                         type="text"
                         value={edited.cargo}
                         onChange={(e) => handleChange(profile.id, 'cargo', e.target.value)}
-                        className="border rounded px-2 py-1 text-sm w-full max-w-[200px] focus:outline-none focus:ring-2 focus:ring-verde/50"
+                        className="border border-gray-300 rounded bg-white text-gray-800 px-2 py-1 text-sm w-full max-w-[200px] focus:outline-none focus:ring-2 focus:ring-verde/50"
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -103,7 +103,7 @@ export default function ColaboradoresClient({ profiles: initialProfiles }: Props
                         type="number"
                         value={edited.salario}
                         onChange={(e) => handleChange(profile.id, 'salario', e.target.value)}
-                        className="border rounded px-2 py-1 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-verde/50"
+                        className="border border-gray-300 rounded bg-white text-gray-800 px-2 py-1 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-verde/50"
                       />
                     </td>
                     <td className="px-4 py-3">

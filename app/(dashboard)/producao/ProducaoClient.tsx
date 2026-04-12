@@ -116,7 +116,7 @@ function EditableCell({
           onChange={(e) => setLocalValue(e.target.value)}
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
-          className={`w-16 h-8 text-center text-sm border-0 outline-none focus:ring-2 focus:ring-verde/40 transition-colors ${
+          className={`w-16 h-8 text-center text-sm text-gray-800 border-0 outline-none focus:ring-2 focus:ring-verde/40 transition-colors ${
             saving ? 'bg-yellow-50' : saved ? 'bg-green-50' : 'bg-transparent'
           }`}
         />
@@ -428,7 +428,7 @@ export default function ProducaoClient() {
         <select
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-verde/40 focus:border-verde"
+          className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800 text-sm focus:ring-2 focus:ring-verde/40 focus:border-verde"
         >
           {monthOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>

@@ -133,7 +133,7 @@ export default function CampanhasClient() {
               onChange={(e) => setNome(e.target.value)}
               placeholder="Nome da campanha"
               required
-              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-verde/50"
+              className="w-full border border-gray-300 rounded bg-white text-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-verde/50"
             />
           </div>
           <div>
@@ -143,7 +143,7 @@ export default function CampanhasClient() {
               value={objetivo}
               onChange={(e) => setObjetivo(e.target.value)}
               placeholder="Objetivo da campanha"
-              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-verde/50"
+              className="w-full border border-gray-300 rounded bg-white text-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-verde/50"
             />
           </div>
           <div>
@@ -153,7 +153,7 @@ export default function CampanhasClient() {
               value={premio}
               onChange={(e) => setPremio(Number(e.target.value))}
               min={0}
-              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-verde/50"
+              className="w-full border border-gray-300 rounded bg-white text-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-verde/50"
             />
           </div>
           <div>
@@ -161,7 +161,7 @@ export default function CampanhasClient() {
             <select
               value={equipe}
               onChange={(e) => setEquipe(e.target.value as 'todos' | 'juridico' | 'comercial')}
-              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-verde/50"
+              className="w-full border border-gray-300 rounded bg-white text-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-verde/50"
             >
               <option value="todos">Todos</option>
               <option value="juridico">Juridico</option>

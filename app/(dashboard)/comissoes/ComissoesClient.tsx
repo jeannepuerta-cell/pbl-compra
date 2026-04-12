@@ -249,7 +249,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
               <select
                 value={filterPerson}
                 onChange={(e) => setFilterPerson(e.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                className="rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
               >
                 <option value="todos">Todos</option>
                 {allProfiles.filter((p) => p.setor !== 'gestor').map((p) => (
@@ -324,7 +324,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
                   type="month"
                   value={liqMes}
                   onChange={(e) => setLiqMes(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                  className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
                 />
               </div>
               <div>
@@ -334,7 +334,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
                   value={liqTotalProc || ''}
                   onChange={(e) => setLiqTotalProc(Number(e.target.value) || 0)}
                   min={0}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                  className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
                 />
               </div>
               <div>
@@ -345,7 +345,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
                   onChange={(e) => setLiqPool(Number(e.target.value) || 0)}
                   min={0}
                   step={0.01}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                  className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
                 />
               </div>
             </div>
@@ -375,7 +375,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
                       }
                       min={0}
                       placeholder="0"
-                      className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                      className="flex-1 rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-1.5 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
                     />
                     <span className="text-sm text-gray-500 w-28 text-right">
                       {formatBRL(calcularLiquidacaoPessoa(liqPorPessoa[m.login] || 0, liqTotalProc, liqPool))}
@@ -454,7 +454,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
                   }
                   min={0}
                   step={1000}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                  className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
                 />
               </div>
               <div>
@@ -467,7 +467,7 @@ export default function ComissoesClient({ currentProfile, allProfiles }: Props) 
                   }
                   min={0}
                   step={1000}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                  className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
                 />
               </div>
             </div>

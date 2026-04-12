@@ -124,7 +124,7 @@ export default function UsuariosClient({ profiles }: Props) {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Digite a nova senha"
-              className="w-full border rounded px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-verde/50"
+              className="w-full border border-gray-300 rounded bg-white text-gray-800 px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-verde/50"
             />
 
             {message && (

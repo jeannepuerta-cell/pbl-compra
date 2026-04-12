@@ -3,21 +3,50 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #f9fafb;
+  --foreground: #1a1a1a;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  /* Texto escuro legivel em todos os form controls */
+  input,
+  select,
+  textarea,
+  option {
+    color: #1a1a1a !important;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #6b7280 !important;
+  }
+
+  /* Dropdowns e selects: fundo branco, texto escuro */
+  select option {
+    background-color: #ffffff;
+    color: #1a1a1a;
+  }
+
+  /* Tabelas: texto sempre legivel */
+  table th {
+    color: #374151;
+  }
+
+  table td {
+    color: #1f2937;
+  }
+
+  /* optgroup labels */
+  select optgroup {
+    color: #01423e;
+    font-weight: 600;
+  }
 }
 
 @layer utilities {

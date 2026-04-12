@@ -199,7 +199,7 @@ export default function LancamentosClient({ profiles }: Props) {
                 value={responsavel}
                 onChange={(e) => setResponsavel(e.target.value)}
                 disabled={tipo === 'precatorio'}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde disabled:bg-gray-100"
+                className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde disabled:bg-gray-100"
               >
                 {relevantMembers.map((m) => (
                   <option key={m.login} value={m.login}>
@@ -219,7 +219,7 @@ export default function LancamentosClient({ profiles }: Props) {
                 value={data}
                 onChange={(e) => setData(e.target.value)}
                 required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
               />
             </div>
 
@@ -233,7 +233,7 @@ export default function LancamentosClient({ profiles }: Props) {
                 value={numero}
                 onChange={(e) => setNumero(e.target.value)}
                 placeholder="Numero do processo/operacao"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
               />
             </div>
 
@@ -247,7 +247,7 @@ export default function LancamentosClient({ profiles }: Props) {
                 value={creditos}
                 onChange={(e) => setCreditos(Number(e.target.value) || 1)}
                 min={1}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
               />
             </div>
 
@@ -262,7 +262,7 @@ export default function LancamentosClient({ profiles }: Props) {
                 onChange={(e) => setValor(Number(e.target.value) || 0)}
                 min={0}
                 step={0.01}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
+                className="w-full rounded-lg border border-gray-300 bg-white text-gray-800 px-3 py-2 text-sm focus:border-verde focus:ring-1 focus:ring-verde"
               />
             </div>
 
