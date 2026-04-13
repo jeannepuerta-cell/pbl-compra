@@ -106,7 +106,39 @@ Deno.serve(async (req) => {
       )
     }
 
-    // 5. Verificar palavras de escalação
+    // 5. Verificar se IA está desabilitada nesta conversa
+    if (conversa.ia_desabilitada) {
+      // Salvar mensagem do cliente mas não gerar resposta
+      await supabase.from("wa_mensagens").insert({
+        conversa_id: conversa.id,
+        direcao: "in",
+        autor: "cliente",
+        conteudo: mensagem,
+        modo_no_momento: bot.modo,
+      })
+
+      await supabase
+        .from("wa_conversas")
+        .update({ ultima_mensagem_at: new Date().toISOString() })
+        .eq("id", conversa.id)
+
+      return new Response(
+        JSON.stringify({
+          texto: null,
+          ia_desabilitada: true,
+          conversa_id: conversa.id,
+          cliente_id: cliente.id,
+          telefone,
+          bot_nome: bot.nome,
+          modo: bot.modo,
+          modo_treinamento: bot.modo === "treinamento",
+          status: conversa.status,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      )
+    }
+
+    // 6. Verificar palavras de escalação
     const palavrasEscalacao: string[] = bot.palavras_escalacao || []
     const msgLower = mensagem.toLowerCase()
     const deveEscalar = palavrasEscalacao.some((p: string) => msgLower.includes(p.toLowerCase()))

@@ -118,16 +118,22 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
 
   const selectedConversa = conversas.find((c) => c.id === selectedId) ?? null
 
-  // Find the pending AI suggestion (last outgoing message with resposta_sugerida_ia)
+  // Find the pending AI suggestion
+  // Only show if: mode is treinamento, there's a suggestion not yet approved,
+  // and no human message was sent after it
   const pendingSuggestion = (() => {
     if (!mensagens.length) return null
-    // Look at last few messages for a pending suggestion
+    if (selectedConversa?.ia_desabilitada) return null
+
     for (let i = mensagens.length - 1; i >= 0; i--) {
       const m = mensagens[i]
-      if (m.resposta_sugerida_ia && m.modo_no_momento === 'treinamento' && !m.aprovada_por) {
+      // If last message is from humano (approved/sent), no pending suggestion
+      if (m.direcao === 'out' && m.autor === 'humano') return null
+      // If we find an AI suggestion in treinamento without approval
+      if (m.resposta_sugerida_ia && m.modo_no_momento === 'treinamento' && m.autor === 'ia' && !m.aprovada_por) {
         return m
       }
-      // Stop searching if we hit a client message
+      // Stop searching if we hit a client message without finding a suggestion
       if (m.direcao === 'in') break
     }
     return null
@@ -290,6 +296,8 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
           autor: 'humano',
         }),
       })
+      // Marcar como aprovada e recarregar
+      await fetchMessages(selectedId)
     } catch (err) {
       console.error('Error approving suggestion:', err)
     } finally {
@@ -319,10 +327,32 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
       })
       setEditingSuggestion(false)
       setEditedSuggestion('')
+      await fetchMessages(selectedId)
     } catch (err) {
       console.error('Error sending edited suggestion:', err)
     } finally {
       setSending(false)
+    }
+  }
+
+  const handleToggleIA = async () => {
+    if (!selectedConversa || !selectedId) return
+    const novoValor = !selectedConversa.ia_desabilitada
+    try {
+      const supabase = createClient()
+      await supabase
+        .from('wa_conversas')
+        .update({ ia_desabilitada: novoValor })
+        .eq('id', selectedId)
+
+      // Atualizar estado local
+      setConversas((prev) =>
+        prev.map((c) =>
+          c.id === selectedId ? { ...c, ia_desabilitada: novoValor } : c
+        )
+      )
+    } catch (err) {
+      console.error('Error toggling IA:', err)
     }
   }
 
@@ -359,13 +389,21 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
   }
 
   // --- filtered conversas --------------------------------------------------
-  const filteredConversas = conversas.filter((c) => {
-    if (!searchQuery.trim()) return true
-    const q = searchQuery.toLowerCase()
-    const name = (c.cliente?.nome || '').toLowerCase()
-    const phone = (c.cliente?.telefone || '').toLowerCase()
-    return name.includes(q) || phone.includes(q)
-  })
+  const filteredConversas = conversas
+    .filter((c) => {
+      if (!searchQuery.trim()) return true
+      const q = searchQuery.toLowerCase()
+      const name = (c.cliente?.nome || '').toLowerCase()
+      const phone = (c.cliente?.telefone || '').toLowerCase()
+      return name.includes(q) || phone.includes(q)
+    })
+    .sort((a, b) => {
+      // IA desabilitada sempre no topo
+      if (a.ia_desabilitada && !b.ia_desabilitada) return -1
+      if (!a.ia_desabilitada && b.ia_desabilitada) return 1
+      // Depois por última mensagem
+      return new Date(b.ultima_mensagem_at).getTime() - new Date(a.ultima_mensagem_at).getTime()
+    })
 
   // --- last message preview ------------------------------------------------
   function lastMessagePreview(conversa: WaConversa): string {
@@ -462,9 +500,12 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
                   </div>
                   <div className="flex items-center justify-between mt-0.5">
                     <span className="text-sm text-[#667781] truncate">
-                      {lastMessagePreview(conversa)}
+                      {conversa.ia_desabilitada ? '🤖 IA desabilitada' : lastMessagePreview(conversa)}
                     </span>
-                    <span className="text-xs ml-2 shrink-0">
+                    <span className="text-xs ml-2 shrink-0 flex items-center gap-1">
+                      {conversa.ia_desabilitada && (
+                        <span className="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded">SEM IA</span>
+                      )}
                       {statusIndicator(conversa.status)}
                     </span>
                   </div>
@@ -557,6 +598,21 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
                   {displayPhone(selectedConversa)}
                 </span>
               </div>
+
+              {/* Toggle IA button */}
+              <button
+                onClick={handleToggleIA}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors shrink-0',
+                  selectedConversa.ia_desabilitada
+                    ? 'bg-red-500/20 text-red-200 hover:bg-red-500/30'
+                    : 'bg-white/10 text-white/80 hover:bg-white/20'
+                )}
+                title={selectedConversa.ia_desabilitada ? 'Ativar IA' : 'Desativar IA'}
+              >
+                <span className="text-sm">{selectedConversa.ia_desabilitada ? '🤖' : '🤖'}</span>
+                {selectedConversa.ia_desabilitada ? 'IA OFF' : 'IA ON'}
+              </button>
             </div>
 
             {/* Messages Area */}

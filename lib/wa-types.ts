@@ -45,6 +45,7 @@ export interface WaConversa {
   openai_conversation_id: string | null
   status: 'ativa' | 'arquivada' | 'escalada'
   boas_vindas_enviada: boolean
+  ia_desabilitada: boolean
   ultima_mensagem_at: string
   created_at: string
   updated_at: string
