@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { checkWaAccess } from '@/lib/wa-auth'
+import { getWebhookUrl, getWebhookMode } from '@/lib/wa-webhook'
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
     const telefone = (conversa?.wa_clientes as unknown as { telefone: string })?.telefone
 
     // Forward to n8n webhook if configured
-    const webhookUrl = process.env.N8N_SEND_WEBHOOK_URL
+    const webhookUrl = getWebhookUrl()
     if (webhookUrl && telefone) {
       try {
         await fetch(webhookUrl, {
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify({ telefone, mensagem: conteudo }),
         })
       } catch {
-        console.error('Falha ao enviar para webhook n8n')
+        console.error(`Falha ao enviar para webhook n8n (modo: ${getWebhookMode()})`)
       }
     }
 
