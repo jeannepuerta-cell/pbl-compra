@@ -132,6 +132,11 @@ Deno.serve(async (req) => {
           telefone,
           mensagem_original: mensagem,
           conversa_id: conversa.id,
+          cliente_id: cliente.id,
+          bot_nome: bot.nome,
+          modo: bot.modo,
+          modo_treinamento: bot.modo === "treinamento",
+          status: "escalada",
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       )
@@ -167,6 +172,12 @@ Deno.serve(async (req) => {
           texto: bot.mensagem_boas_vindas,
           tipo: "boas_vindas",
           conversa_id: conversa.id,
+          cliente_id: cliente.id,
+          telefone,
+          bot_nome: bot.nome,
+          modo: bot.modo,
+          modo_treinamento: bot.modo === "treinamento",
+          status: "ativa",
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       )
@@ -275,7 +286,12 @@ Deno.serve(async (req) => {
           sugestao: respostaIA,
           aguardando_humano: true,
           conversa_id: conversa.id,
+          cliente_id: cliente.id,
           telefone,
+          bot_nome: bot.nome,
+          modo: bot.modo,
+          modo_treinamento: true,
+          status: conversa.status,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       )
@@ -297,6 +313,12 @@ Deno.serve(async (req) => {
         texto: respostaIA,
         tipo: "resposta_ia",
         conversa_id: conversa.id,
+        cliente_id: cliente.id,
+        telefone,
+        bot_nome: bot.nome,
+        modo: bot.modo,
+        modo_treinamento: false,
+        status: conversa.status,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     )
