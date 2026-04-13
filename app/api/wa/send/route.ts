@@ -49,22 +49,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
+    // Get telefone from conversa → cliente
+    const { data: conversa } = await supabase
+      .from('wa_conversas')
+      .select('cliente_id, wa_clientes(telefone)')
+      .eq('id', conversa_id)
+      .single()
+
+    const telefone = (conversa?.wa_clientes as unknown as { telefone: string })?.telefone
+
     // Forward to n8n webhook if configured
     const webhookUrl = process.env.N8N_SEND_WEBHOOK_URL
-    if (webhookUrl) {
+    if (webhookUrl && telefone) {
       try {
         await fetch(webhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            conversa_id,
-            conteudo,
-            autor: autor || 'humano',
-            mensagem_id: mensagem.id,
-          }),
+          body: JSON.stringify({ telefone, mensagem: conteudo }),
         })
       } catch {
-        // Log but don't fail the request if webhook fails
         console.error('Falha ao enviar para webhook n8n')
       }
     }

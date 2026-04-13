@@ -20,6 +20,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     const openaiKey = Deno.env.get("OPENAI_API_KEY")
     const openaiModel = Deno.env.get("OPENAI_DEFAULT_MODEL") || "gpt-4o-mini"
+    const n8nSendWebhook = Deno.env.get("N8N_SEND_WEBHOOK_URL")
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
@@ -167,6 +168,17 @@ Deno.serve(async (req) => {
         modo_no_momento: bot.modo,
       })
 
+      // Enviar boas-vindas via webhook n8n
+      if (n8nSendWebhook) {
+        try {
+          await fetch(n8nSendWebhook, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ telefone, mensagem: bot.mensagem_boas_vindas }),
+          })
+        } catch { /* ignora erro de webhook */ }
+      }
+
       return new Response(
         JSON.stringify({
           texto: bot.mensagem_boas_vindas,
@@ -307,6 +319,17 @@ Deno.serve(async (req) => {
       modo_no_momento: "producao",
       prompt_id_usado: prompt?.id || null,
     })
+
+    // Enviar via webhook n8n
+    if (n8nSendWebhook) {
+      try {
+        await fetch(n8nSendWebhook, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ telefone, mensagem: respostaIA }),
+        })
+      } catch { /* ignora erro de webhook */ }
+    }
 
     return new Response(
       JSON.stringify({
