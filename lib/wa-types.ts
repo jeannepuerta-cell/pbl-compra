@@ -31,6 +31,8 @@ export interface WaCliente {
   telefone: string
   nome: string | null
   metadata: Record<string, unknown>
+  mensagem_agregada: string
+  conversa_iniciada: boolean
   created_at: string
   updated_at: string
 }
