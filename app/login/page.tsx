@@ -65,7 +65,7 @@ export default function LoginPage() {
         return
       }
 
-      router.push('/dashboard')
+      router.push('/modulos')
     } catch {
       setError('Erro ao conectar. Tente novamente.')
     } finally {
