@@ -264,7 +264,7 @@ Deno.serve(async (req) => {
         const previousResponseId = conversa.openai_conversation_id || undefined
 
         const modelo = prompt.modelo || openaiModel
-        const isReasoningModel = modelo.includes("o1") || modelo.includes("o3") || modelo.includes("o4")
+        const isReasoningModel = modelo.includes("o1") || modelo.includes("o3") || modelo.includes("o4") || modelo.includes("gpt-5")
 
         const requestBody: Record<string, unknown> = {
           model: modelo,
