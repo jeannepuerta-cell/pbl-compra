@@ -122,13 +122,17 @@ Deno.serve(async (req) => {
         .update({ ultima_mensagem_at: new Date().toISOString() })
         .eq("id", conversa.id)
 
+      const nomeCliente = cliente.nome || telefone
+
       return new Response(
         JSON.stringify({
-          texto: null,
+          texto: `⚠️ *ATENÇÃO — IA SUSPENSA* ⚠️\n\n👤 *Cliente:* ${nomeCliente}\n📱 *Telefone:* ${telefone}\n\n💬 *Mensagem recebida:*\n_${mensagem}_\n\n🚫 Este cliente está com o serviço de IA suspenso.\n👉 *Um atendente precisa responder manualmente.*\n\n🔗 wa.me/${telefone.replace(/\D/g, '')}`,
           ia_desabilitada: true,
           conversa_id: conversa.id,
           cliente_id: cliente.id,
           telefone,
+          nome_cliente: nomeCliente,
+          mensagem_original: mensagem,
           bot_nome: bot.nome,
           modo: bot.modo,
           modo_treinamento: bot.modo === "treinamento",
