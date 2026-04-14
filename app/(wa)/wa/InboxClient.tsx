@@ -106,40 +106,28 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [mobileShowChat, setMobileShowChat] = useState(false)
 
-  // AI suggestion state
-  const [editingSuggestion, setEditingSuggestion] = useState(false)
-  const [editedSuggestion, setEditedSuggestion] = useState('')
-  const [refineMode, setRefineMode] = useState(false)
+  // Per-message inline action state (keyed by message ID)
+  const [editingMsgId, setEditingMsgId] = useState<string | null>(null)
+  const [editedText, setEditedText] = useState('')
+  const [refiningMsgId, setRefiningMsgId] = useState<string | null>(null)
   const [refineInstruction, setRefineInstruction] = useState('')
   const [refining, setRefining] = useState(false)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
   const selectedConversa = conversas.find((c) => c.id === selectedId) ?? null
 
-  // Find the pending AI suggestion
-  // Only show if: mode is treinamento, there's a suggestion not yet approved,
-  // and no human message was sent after it
-  const pendingSuggestion = (() => {
-    if (!mensagens.length) return null
-    if (selectedConversa?.ia_desabilitada) return null
+  // Check if a message is a pending AI suggestion
+  const isPendingSuggestion = (msg: WaMensagem) =>
+    msg.direcao === 'out' &&
+    msg.autor === 'ia' &&
+    msg.resposta_sugerida_ia &&
+    msg.modo_no_momento === 'treinamento' &&
+    !msg.aprovada_por
 
-    for (let i = mensagens.length - 1; i >= 0; i--) {
-      const m = mensagens[i]
-      // If last message is from humano (approved/sent), no pending suggestion
-      if (m.direcao === 'out' && m.autor === 'humano') return null
-      // If we find an AI suggestion in treinamento without approval
-      if (m.resposta_sugerida_ia && m.modo_no_momento === 'treinamento' && m.autor === 'ia' && !m.aprovada_por) {
-        return m
-      }
-      // Stop searching if we hit a client message without finding a suggestion
-      if (m.direcao === 'in') break
-    }
-    return null
-  })()
-
-  const hasPendingSuggestion = !!pendingSuggestion
+  const hasPendingSuggestions = mensagens.some(isPendingSuggestion)
 
   // --- effects -------------------------------------------------------------
 
@@ -167,8 +155,8 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
   useEffect(() => {
     if (selectedId) {
       fetchMessages(selectedId)
-      setEditingSuggestion(false)
-      setRefineMode(false)
+      setEditingMsgId(null)
+      setRefiningMsgId(null)
     } else {
       setMensagens([])
     }
@@ -283,55 +271,104 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
     }
   }
 
-  const handleApproveSuggestion = async () => {
-    if (!pendingSuggestion || !selectedId) return
-    setSending(true)
+  // Approve a suggestion as-is
+  const handleApprove = async (msg: WaMensagem) => {
+    if (!selectedId) return
+    setActionLoading(msg.id)
     try {
       await fetch('/api/wa/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           conversa_id: selectedId,
-          conteudo: pendingSuggestion.resposta_sugerida_ia,
-          autor: 'humano',
+          conteudo: msg.resposta_sugerida_ia,
+          autor: 'ia',
         }),
       })
-      // Marcar como aprovada e recarregar
+      // Delete the suggestion message (it was sent as a new one by /api/wa/send)
+      await handleDeleteSuggestion(msg.id)
       await fetchMessages(selectedId)
     } catch (err) {
-      console.error('Error approving suggestion:', err)
+      console.error('Error approving:', err)
     } finally {
-      setSending(false)
+      setActionLoading(null)
     }
   }
 
-  const handleEditSuggestion = () => {
-    if (!pendingSuggestion) return
-    setEditedSuggestion(pendingSuggestion.resposta_sugerida_ia || '')
-    setEditingSuggestion(true)
-    setRefineMode(false)
+  // Start editing a suggestion inline
+  const handleStartEdit = (msg: WaMensagem) => {
+    setEditingMsgId(msg.id)
+    setEditedText(msg.resposta_sugerida_ia || msg.conteudo)
+    setRefiningMsgId(null)
   }
 
-  const handleSendEdited = async () => {
-    if (!editedSuggestion.trim() || !selectedId) return
-    setSending(true)
+  // Send the edited version
+  const handleSendEdited = async (msg: WaMensagem) => {
+    if (!editedText.trim() || !selectedId) return
+    setActionLoading(msg.id)
     try {
       await fetch('/api/wa/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           conversa_id: selectedId,
-          conteudo: editedSuggestion.trim(),
+          conteudo: editedText.trim(),
           autor: 'humano',
         }),
       })
-      setEditingSuggestion(false)
-      setEditedSuggestion('')
+      await handleDeleteSuggestion(msg.id)
+      setEditingMsgId(null)
+      setEditedText('')
       await fetchMessages(selectedId)
     } catch (err) {
-      console.error('Error sending edited suggestion:', err)
+      console.error('Error sending edited:', err)
     } finally {
-      setSending(false)
+      setActionLoading(null)
+    }
+  }
+
+  // Start refine mode for a specific message
+  const handleStartRefine = (msgId: string) => {
+    setRefiningMsgId(msgId)
+    setRefineInstruction('')
+    setEditingMsgId(null)
+  }
+
+  // Submit refinement
+  const handleRefine = async (msg: WaMensagem) => {
+    if (!refineInstruction.trim() || !selectedId) return
+    setRefining(true)
+    try {
+      const res = await fetch('/api/wa/refine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversa_id: selectedId,
+          mensagem_id: msg.id,
+          instrucao: refineInstruction.trim(),
+        }),
+      })
+      if (res.ok) {
+        setRefineInstruction('')
+        setRefiningMsgId(null)
+        await fetchMessages(selectedId)
+      }
+    } catch (err) {
+      console.error('Error refining:', err)
+    } finally {
+      setRefining(false)
+    }
+  }
+
+  // Delete/cancel a suggestion (remove from chat)
+  const handleDeleteSuggestion = async (msgId: string) => {
+    if (!selectedId) return
+    try {
+      const supabase = createClient()
+      await supabase.from('wa_mensagens').delete().eq('id', msgId)
+      setMensagens((prev) => prev.filter((m) => m.id !== msgId))
+    } catch (err) {
+      console.error('Error deleting suggestion:', err)
     }
   }
 
@@ -345,7 +382,6 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
         .update({ ia_desabilitada: novoValor })
         .eq('id', selectedId)
 
-      // Atualizar estado local
       setConversas((prev) =>
         prev.map((c) =>
           c.id === selectedId ? { ...c, ia_desabilitada: novoValor } : c
@@ -353,31 +389,6 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
       )
     } catch (err) {
       console.error('Error toggling IA:', err)
-    }
-  }
-
-  const handleRefine = async () => {
-    if (!refineInstruction.trim() || !pendingSuggestion || !selectedId) return
-    setRefining(true)
-    try {
-      const res = await fetch('/api/wa/refine', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversa_id: selectedId,
-          mensagem_id: pendingSuggestion.id,
-          instrucao: refineInstruction.trim(),
-        }),
-      })
-      if (res.ok) {
-        setRefineInstruction('')
-        setRefineMode(false)
-        // The realtime subscription will update the message
-      }
-    } catch (err) {
-      console.error('Error refining:', err)
-    } finally {
-      setRefining(false)
     }
   }
 
@@ -588,7 +599,7 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
                       ESCALADA
                     </span>
                   )}
-                  {pendingSuggestion && (
+                  {hasPendingSuggestions && (
                     <span className="text-xs bg-dourado text-white px-2 py-0.5 rounded-full font-medium">
                       MODO TREINAMENTO
                     </span>
@@ -651,6 +662,10 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
                     }
 
                     const isOutgoing = msg.direcao === 'out'
+                    const isPending = isPendingSuggestion(msg)
+                    const isEditing = editingMsgId === msg.id
+                    const isRefiningThis = refiningMsgId === msg.id
+                    const isLoadingThis = actionLoading === msg.id
 
                     return (
                       <div
@@ -662,44 +677,123 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
                       >
                         <div
                           className={cn(
-                            'relative max-w-[65%] rounded-lg px-3 py-1.5 shadow-sm',
-                            isOutgoing
+                            'relative rounded-lg shadow-sm',
+                            isPending ? 'max-w-[75%]' : 'max-w-[65%]',
+                            isPending
+                              ? 'bg-amber-50 border border-amber-300 rounded-tr-none'
+                              : isOutgoing
                               ? 'bg-[#d9fdd3] rounded-tr-none'
                               : 'bg-white rounded-tl-none'
                           )}
                         >
-                          {/* Author label */}
-                          <div
-                            className={cn(
+                          <div className="px-3 py-1.5">
+                            {/* Author label */}
+                            <div className={cn(
                               'text-[11px] font-semibold mb-0.5',
-                              isOutgoing ? 'text-[#1fa855]' : 'text-[#6b7c85]'
+                              isPending ? 'text-amber-700' : isOutgoing ? 'text-[#1fa855]' : 'text-[#6b7c85]'
+                            )}>
+                              {isPending ? '🤖 Sugestão da IA' : msg.autor === 'cliente' ? 'Cliente' : msg.autor === 'ia' ? 'IA' : msg.autor === 'humano' ? 'Humano' : msg.autor}
+                            </div>
+
+                            {/* Content or edit area */}
+                            {isEditing ? (
+                              <div className="space-y-2 mt-1">
+                                <textarea
+                                  value={editedText}
+                                  onChange={(e) => setEditedText(e.target.value)}
+                                  rows={3}
+                                  className="w-full border border-amber-300 rounded px-2 py-1.5 text-sm text-[#111b21] focus:outline-none focus:ring-1 focus:ring-verde/30 resize-none bg-white"
+                                />
+                                <div className="flex gap-1.5">
+                                  <button
+                                    onClick={() => handleSendEdited(msg)}
+                                    disabled={isLoadingThis || !editedText.trim()}
+                                    className="px-3 py-1 bg-verde text-white text-xs rounded font-medium hover:bg-verde-escuro disabled:opacity-50"
+                                  >
+                                    {isLoadingThis ? '...' : 'Enviar'}
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingMsgId(null)}
+                                    className="px-3 py-1 bg-gray-200 text-gray-600 text-xs rounded font-medium hover:bg-gray-300"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </div>
+                            ) : isRefiningThis ? (
+                              <div className="space-y-2 mt-1">
+                                <p className="text-sm text-[#111b21] whitespace-pre-wrap break-words leading-relaxed">
+                                  {msg.resposta_sugerida_ia}
+                                </p>
+                                <input
+                                  type="text"
+                                  placeholder="Ex: mais formal, adicione X..."
+                                  value={refineInstruction}
+                                  onChange={(e) => setRefineInstruction(e.target.value)}
+                                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleRefine(msg) } }}
+                                  className="w-full border border-amber-300 rounded px-2 py-1.5 text-sm text-[#111b21] focus:outline-none focus:ring-1 focus:ring-orange-300 bg-white placeholder:text-gray-400"
+                                />
+                                <div className="flex gap-1.5">
+                                  <button
+                                    onClick={() => handleRefine(msg)}
+                                    disabled={refining || !refineInstruction.trim()}
+                                    className="px-3 py-1 bg-orange-500 text-white text-xs rounded font-medium hover:bg-orange-600 disabled:opacity-50"
+                                  >
+                                    {refining ? '...' : 'Refinar'}
+                                  </button>
+                                  <button
+                                    onClick={() => setRefiningMsgId(null)}
+                                    className="px-3 py-1 bg-gray-200 text-gray-600 text-xs rounded font-medium hover:bg-gray-300"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-[#111b21] text-sm whitespace-pre-wrap break-words leading-relaxed">
+                                {msg.conteudo}
+                              </p>
                             )}
-                          >
-                            {msg.autor === 'cliente'
-                              ? 'Cliente'
-                              : msg.autor === 'ia'
-                              ? 'IA'
-                              : msg.autor === 'humano'
-                              ? 'Humano'
-                              : msg.autor}
+
+                            {/* Timestamp */}
+                            <div className="flex items-center justify-end gap-1 mt-0.5">
+                              {msg.modo_no_momento === 'treinamento' && !isPending && (
+                                <span className="text-[10px] text-dourado font-medium">treino</span>
+                              )}
+                              <span className="text-[10px] text-[#667781]">{formatTime(msg.created_at)}</span>
+                            </div>
                           </div>
 
-                          {/* Content */}
-                          <p className="text-[#111b21] text-sm whitespace-pre-wrap break-words leading-relaxed">
-                            {msg.conteudo}
-                          </p>
-
-                          {/* Timestamp + author tag */}
-                          <div className="flex items-center justify-end gap-1 mt-0.5">
-                            {msg.modo_no_momento === 'treinamento' && (
-                              <span className="text-[10px] text-dourado font-medium">
-                                treino
-                              </span>
-                            )}
-                            <span className="text-[10px] text-[#667781]">
-                              {formatTime(msg.created_at)}
-                            </span>
-                          </div>
+                          {/* Action buttons for pending suggestions */}
+                          {isPending && !isEditing && !isRefiningThis && (
+                            <div className="flex border-t border-amber-200">
+                              <button
+                                onClick={() => handleApprove(msg)}
+                                disabled={isLoadingThis}
+                                className="flex-1 py-2 text-xs font-semibold text-verde hover:bg-verde/5 border-r border-amber-200 transition-colors disabled:opacity-50"
+                              >
+                                {isLoadingThis ? '...' : '✓ Aprovar'}
+                              </button>
+                              <button
+                                onClick={() => handleStartEdit(msg)}
+                                className="flex-1 py-2 text-xs font-semibold text-sky-600 hover:bg-sky-50 border-r border-amber-200 transition-colors"
+                              >
+                                ✏️ Editar
+                              </button>
+                              <button
+                                onClick={() => handleStartRefine(msg.id)}
+                                className="flex-1 py-2 text-xs font-semibold text-orange-600 hover:bg-orange-50 border-r border-amber-200 transition-colors"
+                              >
+                                🔄 Refinar
+                              </button>
+                              <button
+                                onClick={() => handleDeleteSuggestion(msg.id)}
+                                className="flex-1 py-2 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors"
+                              >
+                                ✕ Descartar
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )
@@ -709,153 +803,31 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
               )}
             </div>
 
-            {/* AI Suggestion Card */}
-            {pendingSuggestion && (
-              <div className="px-4 md:px-12 lg:px-16 py-3 bg-amber-50 border-t-2 border-amber-400 shrink-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                  <span className="text-sm font-semibold text-amber-800">
-                    Sugestao da IA
-                  </span>
-                </div>
-
-                {editingSuggestion ? (
-                  <div className="space-y-2">
-                    <textarea
-                      value={editedSuggestion}
-                      onChange={(e) => setEditedSuggestion(e.target.value)}
-                      rows={3}
-                      className="w-full border border-amber-300 rounded-lg px-3 py-2 text-sm text-[#111b21] focus:outline-none focus:ring-2 focus:ring-verde/30 resize-none"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleSendEdited}
-                        disabled={sending || !editedSuggestion.trim()}
-                        className="px-4 py-1.5 bg-verde text-white text-sm rounded-lg font-medium hover:bg-verde-escuro transition-colors disabled:opacity-50"
-                      >
-                        Enviar editado
-                      </button>
-                      <button
-                        onClick={() => setEditingSuggestion(false)}
-                        className="px-4 py-1.5 bg-gray-200 text-gray-700 text-sm rounded-lg font-medium hover:bg-gray-300 transition-colors"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                ) : refineMode ? (
-                  <div className="space-y-2">
-                    <p className="text-sm text-[#111b21] bg-white rounded-lg px-3 py-2 border border-amber-200">
-                      {pendingSuggestion.resposta_sugerida_ia}
-                    </p>
-                    <input
-                      type="text"
-                      placeholder="Instrucao para refinar (ex: mais formal, mais curto...)"
-                      value={refineInstruction}
-                      onChange={(e) => setRefineInstruction(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault()
-                          handleRefine()
-                        }
-                      }}
-                      className="w-full border border-amber-300 rounded-lg px-3 py-2 text-sm text-[#111b21] focus:outline-none focus:ring-2 focus:ring-orange-300 placeholder:text-[#667781]"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleRefine}
-                        disabled={refining || !refineInstruction.trim()}
-                        className="px-4 py-1.5 bg-orange-500 text-white text-sm rounded-lg font-medium hover:bg-orange-600 transition-colors disabled:opacity-50"
-                      >
-                        {refining ? 'Refinando...' : 'Refinar'}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setRefineMode(false)
-                          setRefineInstruction('')
-                        }}
-                        className="px-4 py-1.5 bg-gray-200 text-gray-700 text-sm rounded-lg font-medium hover:bg-gray-300 transition-colors"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-sm text-[#111b21] bg-white rounded-lg px-3 py-2 border border-amber-200">
-                      {pendingSuggestion.resposta_sugerida_ia}
-                    </p>
-                    <div className="flex gap-2 flex-wrap">
-                      <button
-                        onClick={handleApproveSuggestion}
-                        disabled={sending}
-                        className="px-4 py-1.5 bg-verde text-white text-sm rounded-lg font-medium hover:bg-verde-escuro transition-colors disabled:opacity-50"
-                      >
-                        Aprovar e Enviar
-                      </button>
-                      <button
-                        onClick={handleEditSuggestion}
-                        className="px-4 py-1.5 bg-sky-500 text-white text-sm rounded-lg font-medium hover:bg-sky-600 transition-colors"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => setRefineMode(true)}
-                        className="px-4 py-1.5 bg-orange-500 text-white text-sm rounded-lg font-medium hover:bg-orange-600 transition-colors"
-                      >
-                        Refinar com Instrucao
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Input Area */}
             <div className="bg-[#f0f2f5] px-4 md:px-12 lg:px-16 py-3 flex items-end gap-3 shrink-0 border-t border-[#d1d7db]">
-              {hasPendingSuggestion ? (
-                <div className="flex-1 flex items-center justify-center py-2">
-                  <span className="text-sm text-[#667781] italic">
-                    Aguardando aprovacao da sugestao
-                  </span>
-                </div>
-              ) : (
-                <>
-                  <textarea
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Digite uma mensagem"
-                    rows={1}
-                    className="flex-1 bg-white rounded-lg px-4 py-2.5 text-sm text-[#111b21] placeholder:text-[#667781] focus:outline-none resize-none max-h-[120px] shadow-sm border border-[#e0e0e0]"
-                    style={{
-                      height: 'auto',
-                      minHeight: '42px',
-                    }}
-                    onInput={(e) => {
-                      const target = e.target as HTMLTextAreaElement
-                      target.style.height = 'auto'
-                      target.style.height = Math.min(target.scrollHeight, 120) + 'px'
-                    }}
-                  />
-                  <button
-                    onClick={handleSend}
-                    disabled={sending || !inputText.trim()}
-                    className="w-10 h-10 bg-verde rounded-full flex items-center justify-center text-white hover:bg-verde-escuro transition-colors disabled:opacity-40 shrink-0 shadow-sm"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                      />
-                    </svg>
-                  </button>
-                </>
-              )}
+              <textarea
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Digite uma mensagem"
+                rows={1}
+                className="flex-1 bg-white rounded-lg px-4 py-2.5 text-sm text-[#111b21] placeholder:text-[#667781] focus:outline-none resize-none max-h-[120px] shadow-sm border border-[#e0e0e0]"
+                style={{ height: 'auto', minHeight: '42px' }}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement
+                  target.style.height = 'auto'
+                  target.style.height = Math.min(target.scrollHeight, 120) + 'px'
+                }}
+              />
+              <button
+                onClick={handleSend}
+                disabled={sending || !inputText.trim()}
+                className="w-10 h-10 bg-verde rounded-full flex items-center justify-center text-white hover:bg-verde-escuro transition-colors disabled:opacity-40 shrink-0 shadow-sm"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </button>
             </div>
           </>
         )}
