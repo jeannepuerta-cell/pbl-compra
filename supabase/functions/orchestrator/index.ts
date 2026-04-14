@@ -20,6 +20,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     const openaiKey = Deno.env.get("OPENAI_API_KEY")
     const openaiModel = Deno.env.get("OPENAI_DEFAULT_MODEL") || "gpt-4o-mini"
+    const nomeAtendente = Deno.env.get("NOME_DO_ATENDENTE") || "Assistente PBL"
     const n8nSendWebhook = Deno.env.get("N8N_SEND_WEBHOOK_URL")
 
     const supabase = createClient(supabaseUrl, supabaseKey)
@@ -195,12 +196,14 @@ Deno.serve(async (req) => {
         modo_no_momento: bot.modo,
       })
 
-      // Salvar boas-vindas como out
+      // Salvar boas-vindas como out (substituir {{NOME_DO_ATENDENTE}})
+      const boasVindas = (bot.mensagem_boas_vindas || '').replace(/\{\{NOME_DO_ATENDENTE\}\}/g, nomeAtendente)
+
       await supabase.from("wa_mensagens").insert({
         conversa_id: conversa.id,
         direcao: "out",
         autor: "sistema",
-        conteudo: bot.mensagem_boas_vindas,
+        conteudo: boasVindas,
         modo_no_momento: bot.modo,
       })
 
@@ -210,14 +213,14 @@ Deno.serve(async (req) => {
           await fetch(n8nSendWebhook, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ telefone, mensagem: bot.mensagem_boas_vindas }),
+            body: JSON.stringify({ telefone, mensagem: boasVindas }),
           })
         } catch { /* ignora erro de webhook */ }
       }
 
       return new Response(
         JSON.stringify({
-          texto: bot.mensagem_boas_vindas,
+          texto: boasVindas,
           tipo: "boas_vindas",
           conversa_id: conversa.id,
           cliente_id: cliente.id,
@@ -245,8 +248,8 @@ Deno.serve(async (req) => {
     const prompt = bot.prompt_atendimento
 
     if (openaiKey && prompt) {
-      // Montar guard rails no system prompt
-      let systemPrompt = prompt.system_prompt
+      // Substituir variável de nome e montar guard rails
+      let systemPrompt = (prompt.system_prompt || '').replace(/\{\{NOME_DO_ATENDENTE\}\}/g, nomeAtendente)
       if (prompt.guard_rails && Object.keys(prompt.guard_rails).length > 0) {
         const gr = prompt.guard_rails as Record<string, unknown>
         systemPrompt += "\n\n--- REGRAS DE SEGURANÇA ---"
