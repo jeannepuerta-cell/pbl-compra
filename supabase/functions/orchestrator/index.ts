@@ -292,6 +292,11 @@ Deno.serve(async (req) => {
           requestBody.previous_response_id = previousResponseId
         }
 
+        console.log("=== OPENAI REQUEST ===")
+        console.log("Model:", requestBody.model)
+        console.log("isReasoningModel:", isReasoningModel)
+        console.log("Full requestBody:", JSON.stringify(requestBody, null, 2))
+
         const openaiRes = await fetch("https://api.openai.com/v1/responses", {
           method: "POST",
           headers: {
@@ -301,7 +306,11 @@ Deno.serve(async (req) => {
           body: JSON.stringify(requestBody),
         })
 
-        const openaiData = await openaiRes.json()
+        const openaiRawText = await openaiRes.text()
+        console.log("=== OPENAI RESPONSE STATUS ===", openaiRes.status)
+        console.log("=== OPENAI RESPONSE BODY ===", openaiRawText.substring(0, 1000))
+
+        const openaiData = JSON.parse(openaiRawText)
 
         // Verificar se houve erro na API
         if (openaiData.error) {

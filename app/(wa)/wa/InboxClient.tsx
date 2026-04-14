@@ -250,22 +250,30 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
 
   const handleSend = async () => {
     if (!inputText.trim() || !selectedId || sending) return
+    const texto = inputText.trim()
     setSending(true)
+    setInputText('')
     try {
       const res = await fetch('/api/wa/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           conversa_id: selectedId,
-          conteudo: inputText.trim(),
+          conteudo: texto,
           autor: 'humano',
         }),
       })
-      if (res.ok) {
-        setInputText('')
+      if (!res.ok) {
+        const err = await res.json()
+        console.error('Send error:', err)
+        setInputText(texto)
+      } else {
+        await fetchMessages(selectedId)
+        fetchConversas()
       }
     } catch (err) {
       console.error('Error sending message:', err)
+      setInputText(texto)
     } finally {
       setSending(false)
     }
