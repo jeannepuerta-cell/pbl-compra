@@ -263,17 +263,28 @@ Deno.serve(async (req) => {
         // Usar Responses API com previous_response_id para manter conversa com cache
         const previousResponseId = conversa.openai_conversation_id || undefined
 
+        const modelo = prompt.modelo || openaiModel
+        const isReasoningModel = modelo.includes("o1") || modelo.includes("o3") || modelo.includes("o4")
+
         const requestBody: Record<string, unknown> = {
-          model: prompt.modelo || openaiModel,
+          model: modelo,
           input: mensagem,
           instructions: systemPrompt,
-          temperature: prompt.temperatura || 0.3,
           top_p: 0.98,
           store: true,
-          reasoning: {
+        }
+
+        // temperature só para modelos não-reasoning
+        if (!isReasoningModel) {
+          requestBody.temperature = prompt.temperatura || 0.3
+        }
+
+        // reasoning params só para modelos que suportam
+        if (isReasoningModel) {
+          requestBody.reasoning = {
             effort: "medium",
             summary: "medium",
-          },
+          }
         }
 
         // Se já tem conversa anterior, encadeia (usa cache)
@@ -292,28 +303,46 @@ Deno.serve(async (req) => {
 
         const openaiData = await openaiRes.json()
 
-        // Extrair texto da resposta
-        respostaIA = ""
-        if (openaiData.output) {
-          for (const item of openaiData.output) {
-            if (item.type === "message" && item.content) {
-              for (const c of item.content) {
-                if (c.type === "output_text") {
-                  respostaIA += c.text
+        // Verificar se houve erro na API
+        if (openaiData.error) {
+          console.error("OpenAI error:", JSON.stringify(openaiData.error))
+          respostaIA = `[Erro da IA: ${openaiData.error.message || "erro desconhecido"}]`
+        } else {
+          // Extrair texto da resposta
+          respostaIA = ""
+          if (openaiData.output) {
+            for (const item of openaiData.output) {
+              if (item.type === "message" && item.content) {
+                for (const c of item.content) {
+                  if (c.type === "output_text") {
+                    respostaIA += c.text
+                  }
                 }
               }
             }
           }
-        }
 
-        // Salvar o response_id como conversation_id para encadear próximas mensagens
-        if (openaiData.id) {
-          await supabase
-            .from("wa_conversas")
-            .update({ openai_conversation_id: openaiData.id })
-            .eq("id", conversa.id)
+          // Fallback: tentar output_text direto (formatos alternativos)
+          if (!respostaIA && openaiData.output_text) {
+            respostaIA = openaiData.output_text
+          }
+
+          // Se ainda vazio, logar a resposta completa
+          if (!respostaIA) {
+            console.error("OpenAI resposta sem texto:", JSON.stringify(openaiData).substring(0, 500))
+            respostaIA = "[IA não gerou resposta. Um atendente entrará em contato.]"
+          }
+
+          // Salvar o response_id para encadear próximas mensagens (cache)
+          if (openaiData.id) {
+            await supabase
+              .from("wa_conversas")
+              .update({ openai_conversation_id: openaiData.id })
+              .eq("id", conversa.id)
+          }
         }
-      } catch {
+      } catch (err) {
+        console.error("OpenAI fetch error:", err)
         respostaIA = "[Erro ao gerar resposta da IA. Um atendente entrará em contato.]"
       }
     } else {
