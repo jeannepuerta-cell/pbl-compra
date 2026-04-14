@@ -259,46 +259,55 @@ Deno.serve(async (req) => {
         if (gr.proibido_mencionar) systemPrompt += `\nProibido mencionar: ${JSON.stringify(gr.proibido_mencionar)}`
       }
 
-      // Buscar histórico da conversa para contexto
-      const { data: historico } = await supabase
-        .from("wa_mensagens")
-        .select("direcao, autor, conteudo")
-        .eq("conversa_id", conversa.id)
-        .order("created_at", { ascending: true })
-        .limit(20)
-
-      const messages: Array<{ role: string; content: string }> = [
-        { role: "system", content: systemPrompt },
-      ]
-
-      if (historico) {
-        for (const msg of historico) {
-          messages.push({
-            role: msg.direcao === "in" ? "user" : "assistant",
-            content: msg.conteudo,
-          })
-        }
-      }
-
-      // Adicionar a mensagem atual
-      messages.push({ role: "user", content: mensagem })
-
       try {
-        const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        // Usar Responses API com previous_response_id para manter conversa com cache
+        const previousResponseId = conversa.openai_conversation_id || undefined
+
+        const requestBody: Record<string, unknown> = {
+          model: prompt.modelo || openaiModel,
+          input: mensagem,
+          instructions: systemPrompt,
+          temperature: prompt.temperatura || 0.3,
+          store: true,
+        }
+
+        // Se já tem conversa anterior, encadeia (usa cache)
+        if (previousResponseId) {
+          requestBody.previous_response_id = previousResponseId
+        }
+
+        const openaiRes = await fetch("https://api.openai.com/v1/responses", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${openaiKey}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            model: prompt.modelo || openaiModel,
-            messages,
-            temperature: prompt.temperatura || 0.3,
-          }),
+          body: JSON.stringify(requestBody),
         })
 
         const openaiData = await openaiRes.json()
-        respostaIA = openaiData.choices?.[0]?.message?.content || ""
+
+        // Extrair texto da resposta
+        respostaIA = ""
+        if (openaiData.output) {
+          for (const item of openaiData.output) {
+            if (item.type === "message" && item.content) {
+              for (const c of item.content) {
+                if (c.type === "output_text") {
+                  respostaIA += c.text
+                }
+              }
+            }
+          }
+        }
+
+        // Salvar o response_id como conversation_id para encadear próximas mensagens
+        if (openaiData.id) {
+          await supabase
+            .from("wa_conversas")
+            .update({ openai_conversation_id: openaiData.id })
+            .eq("id", conversa.id)
+        }
       } catch {
         respostaIA = "[Erro ao gerar resposta da IA. Um atendente entrará em contato.]"
       }
