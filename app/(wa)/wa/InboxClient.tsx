@@ -686,7 +686,7 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
                         <div
                           className={cn(
                             'relative rounded-lg shadow-sm',
-                            isPending ? 'max-w-[75%]' : 'max-w-[65%]',
+                            (isEditing || isRefiningThis) ? 'max-w-[90%] min-w-[60%]' : isPending ? 'max-w-[75%]' : 'max-w-[65%]',
                             isPending
                               ? 'bg-amber-50 border border-amber-300 rounded-tr-none'
                               : isOutgoing
@@ -709,8 +709,8 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
                                 <textarea
                                   value={editedText}
                                   onChange={(e) => setEditedText(e.target.value)}
-                                  rows={3}
-                                  className="w-full border border-amber-300 rounded px-2 py-1.5 text-sm text-[#111b21] focus:outline-none focus:ring-1 focus:ring-verde/30 resize-none bg-white"
+                                  rows={6}
+                                  className="w-full border border-amber-300 rounded px-3 py-2 text-sm text-[#111b21] focus:outline-none focus:ring-1 focus:ring-verde/30 resize-y bg-white min-h-[120px]"
                                 />
                                 <div className="flex gap-1.5">
                                   <button

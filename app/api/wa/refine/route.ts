@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
     if (!conversa_id || !mensagem_id || !instrucao) {
       return NextResponse.json(
-        { error: 'conversa_id, mensagem_id e instrucao sao obrigatorios.' },
+        { error: 'conversa_id, mensagem_id e instrucao são obrigatórios.' },
         { status: 400 }
       )
     }
@@ -30,27 +30,109 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (fetchError || !mensagem) {
-      return NextResponse.json({ error: 'Mensagem nao encontrada.' }, { status: 404 })
+      return NextResponse.json({ error: 'Mensagem não encontrada.' }, { status: 404 })
     }
 
-    const original = mensagem.resposta_sugerida_ia || mensagem.conteudo
+    const sugestaoOriginal = mensagem.resposta_sugerida_ia || mensagem.conteudo
 
-    // Generate refined version (placeholder without OpenAI)
-    let newSuggestion: string
+    // Buscar a pergunta do cliente (última mensagem 'in' antes da sugestão)
+    const { data: perguntaMsg } = await supabase
+      .from('wa_mensagens')
+      .select('conteudo')
+      .eq('conversa_id', conversa_id)
+      .eq('direcao', 'in')
+      .lt('created_at', mensagem.created_at)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
-    if (process.env.OPENAI_API_KEY) {
-      // Future: integrate with OpenAI for real refinement
-      newSuggestion = `[Refinado] ${original}`
+    const pergunta = perguntaMsg?.conteudo || ''
+
+    // Buscar o prompt de refinamento do bot
+    const { data: conversa } = await supabase
+      .from('wa_conversas')
+      .select('bot_id')
+      .eq('id', conversa_id)
+      .single()
+
+    let promptRefinamento = null
+    if (conversa?.bot_id) {
+      const { data: bot } = await supabase
+        .from('wa_bots_config')
+        .select('prompt_refinamento_id')
+        .eq('id', conversa.bot_id)
+        .single()
+
+      if (bot?.prompt_refinamento_id) {
+        const { data: prompt } = await supabase
+          .from('wa_prompts')
+          .select('*')
+          .eq('id', bot.prompt_refinamento_id)
+          .single()
+        promptRefinamento = prompt
+      }
+    }
+
+    let novaSugestao = ''
+    const openaiKey = process.env.OPENAI_API_KEY
+
+    if (openaiKey) {
+      try {
+        const systemPrompt = promptRefinamento?.system_prompt ||
+          `Você é um assistente que reescreve respostas de atendimento ao cliente.
+Receba a pergunta do cliente, a sugestão original da IA, e uma instrução do atendente sobre como melhorar.
+Gere uma nova versão da resposta seguindo a instrução do atendente.
+Retorne APENAS o texto da nova resposta, sem explicações.`
+
+        const openaiRes = await fetch('https://api.openai.com/v1/responses', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${openaiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: promptRefinamento?.modelo || process.env.OPENAI_DEFAULT_MODEL || 'gpt-4o-mini',
+            input: `Pergunta do cliente:\n"${pergunta}"\n\nSugestão original da IA:\n"${sugestaoOriginal}"\n\nInstrução do atendente para melhorar a resposta:\n"${instrucao}"\n\nGere a nova versão da resposta seguindo a instrução.`,
+            instructions: systemPrompt,
+            store: true,
+          }),
+        })
+
+        const openaiData = await openaiRes.json()
+
+        if (openaiData.error) {
+          console.error('OpenAI refine error:', JSON.stringify(openaiData.error))
+          novaSugestao = `[Erro ao refinar: ${openaiData.error.message}]`
+        } else if (openaiData.output) {
+          for (const item of openaiData.output) {
+            if (item.type === 'message' && item.content) {
+              for (const c of item.content) {
+                if (c.type === 'output_text') {
+                  novaSugestao += c.text
+                }
+              }
+            }
+          }
+        }
+
+        if (!novaSugestao) {
+          novaSugestao = `[IA não gerou refinamento. Instrução: "${instrucao}"]`
+        }
+      } catch (err) {
+        console.error('OpenAI refine fetch error:', err)
+        novaSugestao = `[Erro ao refinar. Instrução: "${instrucao}"]`
+      }
     } else {
-      newSuggestion = `[Refinado] ${original}`
+      novaSugestao = `[Configure OPENAI_API_KEY] Instrução: "${instrucao}" | Original: ${sugestaoOriginal}`
     }
 
-    // Update the message with the refinement instruction and new suggestion
+    // Update the message with the new suggestion and refinement instruction
     const { error: updateError } = await supabase
       .from('wa_mensagens')
       .update({
         instrucao_refinamento: instrucao,
-        resposta_sugerida_ia: newSuggestion,
+        resposta_sugerida_ia: novaSugestao,
+        conteudo: novaSugestao,
       })
       .eq('id', mensagem_id)
 
@@ -58,7 +140,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ sugestao: newSuggestion })
+    return NextResponse.json({ sugestao: novaSugestao })
   } catch {
     return NextResponse.json({ error: 'Erro interno.' }, { status: 500 })
   }
