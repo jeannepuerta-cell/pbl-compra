@@ -283,7 +283,7 @@ Deno.serve(async (req) => {
         if (isReasoningModel) {
           requestBody.reasoning = {
             effort: "medium",
-            summary: "medium",
+            summary: "concise",
           }
         }
 
