@@ -268,7 +268,12 @@ Deno.serve(async (req) => {
           input: mensagem,
           instructions: systemPrompt,
           temperature: prompt.temperatura || 0.3,
+          top_p: 0.98,
           store: true,
+          reasoning: {
+            effort: "medium",
+            summary: "medium",
+          },
         }
 
         // Se já tem conversa anterior, encadeia (usa cache)
