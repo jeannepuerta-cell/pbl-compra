@@ -35,19 +35,6 @@ export async function POST(request: NextRequest) {
 
     const sugestaoOriginal = mensagem.resposta_sugerida_ia || mensagem.conteudo
 
-    // Buscar a pergunta do cliente (última mensagem 'in' antes da sugestão)
-    const { data: perguntaMsg } = await supabase
-      .from('wa_mensagens')
-      .select('conteudo')
-      .eq('conversa_id', conversa_id)
-      .eq('direcao', 'in')
-      .lt('created_at', mensagem.created_at)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    const pergunta = perguntaMsg?.conteudo || ''
-
     // Buscar o prompt de refinamento do bot
     const { data: conversa } = await supabase
       .from('wa_conversas')
