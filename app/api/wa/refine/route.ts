@@ -79,10 +79,10 @@ export async function POST(request: NextRequest) {
     if (openaiKey) {
       try {
         const systemPrompt = promptRefinamento?.system_prompt ||
-          `Você é um assistente que reescreve respostas de atendimento ao cliente.
-Receba a pergunta do cliente, a sugestão original da IA, e uma instrução do atendente sobre como melhorar.
-Gere uma nova versão da resposta seguindo a instrução do atendente.
-Retorne APENAS o texto da nova resposta, sem explicações.`
+          `Você é um assistente de reescrita de respostas de atendimento ao cliente.
+Sua tarefa é reescrever a resposta da IA baseado na orientação do atendente humano.
+A nova resposta deve substituir completamente a anterior.
+Retorne APENAS o texto da nova resposta, sem explicações, sem prefixos, sem aspas.`
 
         const openaiRes = await fetch('https://api.openai.com/v1/responses', {
           method: 'POST',
@@ -92,7 +92,7 @@ Retorne APENAS o texto da nova resposta, sem explicações.`
           },
           body: JSON.stringify({
             model: promptRefinamento?.modelo || process.env.OPENAI_DEFAULT_MODEL || 'gpt-4o-mini',
-            input: `Pergunta do cliente:\n"${pergunta}"\n\nSugestão original da IA:\n"${sugestaoOriginal}"\n\nInstrução do atendente para melhorar a resposta:\n"${instrucao}"\n\nGere a nova versão da resposta seguindo a instrução.`,
+            input: `A IA respondeu:\n\n${sugestaoOriginal}\n\nReescreva essa resposta baseado na orientação fornecida pelo humano responsável:\n\n${instrucao}\n\nA resposta deve substituir o conteúdo anterior da IA.`,
             instructions: systemPrompt,
             store: true,
           }),
