@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { ModuleNav } from '@/components/layout/ModuleNav'
 
 const links = [
   {
@@ -74,22 +75,9 @@ export function ContratosSidebar() {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="px-3 py-3 border-t border-gray-200">
-        <Link
-          href="/modulos"
-          className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M11 17l-5-5m0 0l5-5m-5 5h12"
-            />
-          </svg>
-          Voltar aos Modulos
-        </Link>
+      {/* Module Navigator */}
+      <div className="px-3 py-3 bg-verde-escuro">
+        <ModuleNav />
       </div>
     </aside>
   )

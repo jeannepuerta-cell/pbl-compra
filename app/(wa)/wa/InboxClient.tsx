@@ -579,11 +579,12 @@ export default function InboxClient({ initialConversas }: InboxClientProps) {
               {/* Mobile back button */}
               <button
                 onClick={() => setMobileShowChat(false)}
-                className="md:hidden text-white mr-1"
+                className="md:hidden flex items-center gap-1 text-white bg-white/10 hover:bg-white/20 rounded-lg px-2 py-1.5 mr-1 transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
+                <span className="text-xs font-medium">Voltar</span>
               </button>
 
               {/* Avatar */}

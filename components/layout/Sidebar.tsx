@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Profile } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { ModuleNav } from './ModuleNav'
 
 interface SidebarProps {
   profile: Profile
@@ -135,11 +136,9 @@ export function Sidebar({ profile }: SidebarProps) {
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="px-4 py-3 border-t border-gray-200">
-          <p className="text-xs text-gray-400 text-center">
-            PBL Compra v1.0
-          </p>
+        {/* Module Navigator */}
+        <div className="px-3 py-3 bg-verde-escuro">
+          <ModuleNav />
         </div>
       </aside>
     </>
