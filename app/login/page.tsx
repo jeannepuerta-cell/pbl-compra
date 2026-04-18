@@ -4,10 +4,15 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
+// Mapa de emails customizados (login → email real)
+const CUSTOM_EMAILS: Record<string, string> = {
+  maicon: 'professormaiconceb@gmail.com',
+}
+
 const USERS_BY_SETOR = {
   Diretoria: [
     { login: 'piercarlo', name: 'Piercarlo' },
-    { login: 'maicon', name: 'Maicon', email: 'professormaiconceb@gmail.com' },
+    { login: 'maicon', name: 'Maicon' },
   ],
   Gestora: [
     { login: 'jeanne', name: 'Jeanne' },
@@ -56,12 +61,7 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
-      // Find custom email if defined, otherwise use default pattern
-      const allUsers = Object.values(USERS_BY_SETOR).flat()
-      const selectedUser = allUsers.find((u) => u.login === selectedLogin)
-      const email = ('email' in (selectedUser || {}) && (selectedUser as { email?: string }).email)
-        ? (selectedUser as { email: string }).email
-        : `${selectedLogin}@pblcompra.com`
+      const email = CUSTOM_EMAILS[selectedLogin] || `${selectedLogin}@pblcompra.com`
 
       const { error: authError } = await supabase.auth.signInWithPassword({
         email,
