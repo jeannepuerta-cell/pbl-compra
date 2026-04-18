@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 const USERS_BY_SETOR = {
   Diretoria: [
     { login: 'piercarlo', name: 'Piercarlo' },
+    { login: 'maicon', name: 'Maicon', email: 'professormaiconceb@gmail.com' },
   ],
   Gestora: [
     { login: 'jeanne', name: 'Jeanne' },
@@ -55,8 +56,15 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
+      // Find custom email if defined, otherwise use default pattern
+      const allUsers = Object.values(USERS_BY_SETOR).flat()
+      const selectedUser = allUsers.find((u) => u.login === selectedLogin)
+      const email = ('email' in (selectedUser || {}) && (selectedUser as { email?: string }).email)
+        ? (selectedUser as { email: string }).email
+        : `${selectedLogin}@pblcompra.com`
+
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email: `${selectedLogin}@pblcompra.com`,
+        email,
         password,
       })
 
