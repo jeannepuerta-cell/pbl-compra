@@ -4,15 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-// Mapa de emails customizados (login → email real)
-const CUSTOM_EMAILS: Record<string, string> = {
-  maicon: 'professormaiconceb@gmail.com',
-}
-
 const USERS_BY_SETOR = {
   Diretoria: [
     { login: 'piercarlo', name: 'Piercarlo' },
-    { login: 'maicon', name: 'Maicon' },
   ],
   Gestora: [
     { login: 'jeanne', name: 'Jeanne' },
@@ -38,9 +32,7 @@ const USERS_BY_SETOR = {
 
 export default function LoginPage() {
   const router = useRouter()
-  const [mode, setMode] = useState<'equipe' | 'email'>('equipe')
   const [selectedLogin, setSelectedLogin] = useState('')
-  const [emailInput, setEmailInput] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -49,20 +41,9 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
 
-    let email = ''
-
-    if (mode === 'equipe') {
-      if (!selectedLogin) {
-        setError('Selecione um usuário.')
-        return
-      }
-      email = CUSTOM_EMAILS[selectedLogin] || `${selectedLogin}@pblcompra.com`
-    } else {
-      if (!emailInput) {
-        setError('Digite seu e-mail.')
-        return
-      }
-      email = emailInput.trim()
+    if (!selectedLogin) {
+      setError('Selecione um usuário.')
+      return
     }
 
     if (!password) {
@@ -74,9 +55,8 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
-
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
+        email: `${selectedLogin}@pblcompra.com`,
         password,
       })
 
@@ -113,69 +93,37 @@ export default function LoginPage() {
         >
           <div>
             <h2 className="text-xl font-semibold text-verde-escuro">Entrar</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Selecione seu nome e digite sua senha.
+            </p>
           </div>
 
-          {/* Mode toggle */}
-          <div className="flex rounded-lg bg-gray-100 p-1">
-            <button
-              type="button"
-              onClick={() => setMode('equipe')}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                mode === 'equipe' ? 'bg-verde text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
-              }`}
+          {/* User dropdown */}
+          <div className="space-y-1.5">
+            <label
+              htmlFor="user-select"
+              className="block text-sm font-medium text-gray-700"
             >
-              Equipe PBL
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('email')}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                mode === 'email' ? 'bg-verde text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
-              }`}
+              Usuário
+            </label>
+            <select
+              id="user-select"
+              value={selectedLogin}
+              onChange={(e) => setSelectedLogin(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-dourado focus:ring-2 focus:ring-dourado/30 focus:outline-none transition"
             >
-              E-mail
-            </button>
+              <option value="">Selecione um usuário...</option>
+              {Object.entries(USERS_BY_SETOR).map(([setor, users]) => (
+                <optgroup key={setor} label={setor}>
+                  {users.map((user) => (
+                    <option key={user.login} value={user.login}>
+                      {user.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
-
-          {/* Login field */}
-          {mode === 'equipe' ? (
-            <div className="space-y-1.5">
-              <label htmlFor="user-select" className="block text-sm font-medium text-gray-700">
-                Usuário
-              </label>
-              <select
-                id="user-select"
-                value={selectedLogin}
-                onChange={(e) => setSelectedLogin(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-dourado focus:ring-2 focus:ring-dourado/30 focus:outline-none transition"
-              >
-                <option value="">Selecione um usuário...</option>
-                {Object.entries(USERS_BY_SETOR).map(([setor, users]) => (
-                  <optgroup key={setor} label={setor}>
-                    {users.map((user) => (
-                      <option key={user.login} value={user.login}>
-                        {user.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </div>
-          ) : (
-            <div className="space-y-1.5">
-              <label htmlFor="email-input" className="block text-sm font-medium text-gray-700">
-                E-mail
-              </label>
-              <input
-                id="email-input"
-                type="email"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                placeholder="seu@email.com"
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-dourado focus:ring-2 focus:ring-dourado/30 focus:outline-none transition"
-              />
-            </div>
-          )}
 
           {/* Password */}
           <div className="space-y-1.5">
